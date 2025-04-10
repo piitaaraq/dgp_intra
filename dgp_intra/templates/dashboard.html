@@ -43,22 +43,39 @@
                         <p class="card-text">{{ menu_items[i] or "Dagens ret" }}</p>
 
                         {% if date in registered_dates %}
-                        <form action="{{ url_for('user.cancel_registration', date=date.strftime('%Y-%m-%d')) }}"
-                            method="POST">
-                            <button type="submit" class="btn btn-danger w-100 mt-2">
-                                Afmeld
-                            </button>
-                        </form>
-                        {% else %}
-                        <form action="{{ url_for('user.register_lunch', date=date.strftime('%Y-%m-%d')) }}"
-                            method="POST">
-                            <button type="submit" class="btn btn-outline-primary w-100 mt-2" {% if current_user.credit <
-                                1 %}disabled{% endif %}>
-                                Tilmeld
-                            </button>
-                        </form>
+                        {% set is_past = date < current_date %} {% set is_locked_today=date==current_date and
+                            current_time>= time(9, 0) %}
+                            <form action="{{ url_for('user.cancel_registration', date=date.strftime('%Y-%m-%d')) }}"
+                                method="POST">
+                                <button type="submit" class="btn btn-danger w-100 mt-2" {% if is_past or is_locked_today
+                                    %}disabled{% endif %}>
+                                    Afmeld
+                                </button>
+                            </form>
 
-                        {% endif %}
+                            <form action="{{ url_for('user.add_plus_one', date=date.strftime('%Y-%m-%d')) }}"
+                                method="POST">
+                                <button type="submit" class="btn btn-outline-secondary mt-2" {% if current_user.credit <
+                                    1 or is_past or is_locked_today %}disabled{% endif %}>
+                                    +1
+                                </button>
+                            </form>
+
+                            {% else %}
+
+                            {% set is_past = date < current_date %} {% set is_locked_today=date==current_date and
+                                current_time>= time(9, 0) %}
+
+                                <form action="{{ url_for('user.register_lunch', date=date.strftime('%Y-%m-%d')) }}"
+                                    method="POST">
+                                    <button type="submit" class="btn btn-outline-primary w-100 mt-2" {% if
+                                        current_user.credit < 1 or is_past or is_locked_today %}disabled{% endif %}>
+                                        Tilmeld
+                                    </button>
+                                </form>
+
+
+                                {% endif %}
                     </div>
                 </div>
             </div>

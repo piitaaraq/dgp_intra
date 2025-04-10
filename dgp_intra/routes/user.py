@@ -2,7 +2,8 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, abort
 from flask_login import login_required, current_user
 from ..models import LunchRegistration, WeeklyMenu, Vacation, User
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time 
+
 from flask_mail import Message
 from ..extensions import mail, db
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -20,22 +21,18 @@ def index():
 @login_required
 def dashboard():
     today = datetime.today()
-    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    now = datetime.now()
+    start_of_week = today - timedelta(days=today.weekday())
     dates = [(start_of_week + timedelta(days=i)).date() for i in range(5)]
 
-    # Lunch registrations
     registered_dates = {
         r.date for r in LunchRegistration.query.filter_by(user_id=current_user.id).all()
     }
 
-    # Weekly menu
     iso_week = today.strftime("%Y-W%V")
     weekly_menu = WeeklyMenu.query.filter_by(week=iso_week).first()
-
-    # User vacations
     user_vacations = Vacation.query.filter_by(user_id=current_user.id).order_by(Vacation.start_date).all()
 
-    # All vacations happening today (org-wide)
     today_vacations = (
         db.session.query(Vacation, User)
         .join(User, Vacation.user_id == User.id)
@@ -51,7 +48,10 @@ def dashboard():
         registered_dates=registered_dates,
         weekly_menu=weekly_menu,
         user_vacations=user_vacations,
-        today_vacations=today_vacations  
+        today_vacations=today_vacations,
+        current_date=today.date(),
+        current_time=now.time(),
+        time = time
     )
 
 
@@ -79,6 +79,28 @@ def register_lunch(date):
 
     flash(f"Registered for lunch on {reg_date.strftime('%A %d/%m')}")
     return redirect(url_for('user.dashboard'))
+
+@user_bp.route('/plus_one/<date>', methods=['POST'])
+@login_required
+def add_plus_one(date):
+    try:
+        reg_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        abort(400)
+
+    if current_user.credit < 1:
+        flash("Not enough credit to add an extra registration.")
+        return redirect(url_for('user.dashboard'))
+
+    # Add an extra registration (could be flagged differently in future if needed)
+    plus_one = LunchRegistration(date=reg_date, user_id=current_user.id)
+    db.session.add(plus_one)
+    current_user.credit -= 1
+    db.session.commit()
+
+    flash(f"Added an extra meal for {reg_date.strftime('%A %d/%m')}")
+    return redirect(url_for('user.dashboard'))
+
 
 @user_bp.route('/cancel/<date>', methods=['POST'])
 @login_required
