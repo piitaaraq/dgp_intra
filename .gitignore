@@ -1,0 +1,40 @@
+# Bytecode files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Env config
+.env
+.flaskenv
+
+# IDE config
+.idea/
+.vscode/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# SQLite / testing dbs
+*.sqlite3
+
+# Logs
+*.log
+
+# Compiled files
+*.mo
+
+# Test output
+htmlcov/
+coverage.xml
+.pytest_cache/
+.tox/
+
+# Celery beat schedule (if used)
+celereybeat-schedule

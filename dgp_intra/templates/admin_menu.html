@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Ugemenu{% endblock %}
+
+{% block content %}
+<h2>Ugemenu for {{ current_week }}</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label class="form-label">Mandag</label>
+        <input type="text" name="monday" class="form-control" value="{{ menu.monday if menu else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Tirsdag</label>
+        <input type="text" name="tuesday" class="form-control" value="{{ menu.tuesday if menu else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Onsdag</label>
+        <input type="text" name="wednesday" class="form-control" value="{{ menu.wednesday if menu else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Torsdag</label>
+        <input type="text" name="thursday" class="form-control" value="{{ menu.thursday if menu else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Fredag</label>
+        <input type="text" name="friday" class="form-control" value="{{ menu.friday if menu else '' }}">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Gem Menu</button>
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary ms-2">Tilbage Admin Dashboard</a>
+</form>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+{% set weekdays_da = {
+'Monday': 'Mandag',
+'Tuesday': 'Tirsdag',
+'Wednesday': 'Onsdag',
+'Thursday': 'Torsdag',
+'Friday': 'Fredag',
+'Saturday': 'Lørdag',
+'Sunday': 'Søndag'
+} %}
+
+<h2>Admin Dashboard</h2>
+
+<h4 class="mt-4">Ansatte der mangler at betale for klip</h4>
+{% if users_who_owe %}
+<ul class="list-group mb-4">
+    {% for user in users_who_owe %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>
+            {{ user.name }} ({{ user.email }}) skylder <strong>{{ user.owes }} DKK</strong>
+        </span>
+        <form action="{{ url_for('admin.mark_paid', user_id=user.id) }}" method="POST" class="mb-0">
+            <button type="submit" class="btn btn-sm btn-success">Marker som betalt</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="text-muted">Ingen ansatte skylder penge for klip.</p>
+{% endif %}
+
+<h4 class="mt-4">Registreringer til frokost denne uge</h4>
+{% if grouped_registrations %}
+{% for date, users in grouped_registrations.items()|sort %}
+<div class="mb-3">
+    <h6>{{ weekdays_da[date.strftime('%A')] }} — {{ users|length }} registreret</h6>
+    <ul class="list-group">
+        {% for user in users %}
+        <li class="list-group-item">{{ user.name }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endfor %}
+{% else %}
+<p class="text-muted">Ingen har registreret endnu.</p>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{{ url_for('admin.menu_input') }}" class="btn btn-outline-primary ms-2">Gå til Menu Input</a>
+    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">Tilbage til Dashboard</a>
+</div>
+{% endblock %}

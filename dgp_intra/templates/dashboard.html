@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - DgP Frokost{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <h2>Velkommen, {{ current_user.name }}!</h2>
+        <div class="card mb-4">
+            <div class="card-header">Dine registrerede ferier</div>
+            <ul class="list-group list-group-flush">
+                {% for vac in user_vacations %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        {{ vac.start_date.strftime('%d/%m') }} – {{ vac.end_date.strftime('%d/%m') }}
+                    </span>
+                    <form method="POST" action="{{ url_for('user.delete_vacation', vacation_id=vac.id) }}" class="mb-0">
+                        <button onclick="return confirm('Er du sikker på, at du vil slette denne periode?')"
+                            type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <p>Dine klip: <strong>{{ current_user.credit }}</strong></p>
+
+
+        {% if weekly_menu %}
+        <h4 class="mt-4">Ugemenu</h4>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mt-2">
+            {% for i in range(5) %}
+            {% set date = dates[i] %}
+            {% set day_names = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag'] %}
+            {% set menu_items = [weekly_menu.monday, weekly_menu.tuesday, weekly_menu.wednesday, weekly_menu.thursday,
+            weekly_menu.friday] %}
+
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-header">
+                        {{ day_names[i] }} {{ date.strftime('%d/%m') }}
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ menu_items[i] or "Dagens ret" }}</p>
+
+                        {% if date in registered_dates %}
+                        <form action="{{ url_for('user.cancel_registration', date=date.strftime('%Y-%m-%d')) }}"
+                            method="POST">
+                            <button type="submit" class="btn btn-danger w-100 mt-2">
+                                Afmeld
+                            </button>
+                        </form>
+                        {% else %}
+                        <form action="{{ url_for('user.register_lunch', date=date.strftime('%Y-%m-%d')) }}"
+                            method="POST">
+                            <button type="submit" class="btn btn-outline-primary w-100 mt-2" {% if current_user.credit <
+                                1 %}disabled{% endif %}>
+                                Tilmeld
+                            </button>
+                        </form>
+
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <h4 class="mt-4">Registrer ferie eller fravær</h4>
+        <form method="POST" action="{{ url_for('user.add_vacation') }}" class="row g-3 mb-3">
+            <div class="col-md-5">
+                <label for="start_date" class="form-label">Startdato</label>
+                <input type="date" class="form-control" name="start_date" required>
+            </div>
+            <div class="col-md-5">
+                <label for="end_date" class="form-label">Slutdato</label>
+                <input type="date" class="form-control" name="end_date" required>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Gem</button>
+            </div>
+        </form>
+
+    </div>
+    <div class="col-lg-4 border-start ps-3">
+        <h2>Om huset</h2>
+        <div class="card mb-4">
+            <div class="card-header">Ferie-/fridage i organisationen i dag</div>
+            <ul class="list-group list-group-flush">
+                {% for vac, user in today_vacations %}
+                <li class="list-group-item">
+                    {{ user.name }}: {{ vac.start_date.strftime('%d/%m') }} – {{ vac.end_date.strftime('%d/%m') }}
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">Ingen fravær i dag</li>
+                {% endfor %}
+            </ul>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Køb flere klip{% endblock %}
+
+{% block content %}
+<h2>Køb klip til frokost</h2>
+
+<p>Du har <strong>{{ current_user.credit }}</strong> klip.</p>
+<p>Du skylder: <strong>{{ current_user.owes }} DKK</strong></p>
+
+<form method="POST" class="mt-4">
+    <div class="mb-3">
+        <label class="form-label d-block">Vælg antal:</label>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="amount" value="1" id="credit1" required>
+            <label class="form-check-label" for="credit1">1 klip (22 DKK)</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="amount" value="5" id="credit5">
+            <label class="form-check-label" for="credit5">5 klip (110 DKK)</label>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Bekræft køb</button>
+    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Tilbage til Dashboard</a>
+</form>
+{% endblock %}
