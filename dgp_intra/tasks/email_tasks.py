@@ -3,13 +3,17 @@ from flask_mail import Message
 from extensions import db, mail
 from models import LunchRegistration, User, WeeklyMenu
 from datetime import date
+import os
 
 def load_recipients(filename="email_recipients.txt"):
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # gets tasks/ dir
+    full_path = os.path.join(base_dir, "..", "..", filename)  # up to project root
+
     try:
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(full_path, "r", encoding="utf-8") as f:
             return [line.strip() for line in f if line.strip()]
     except FileNotFoundError:
-        print(f"[Warning] Could not find {filename}. No email will be sent.")
+        print(f"[Warning] Could not find {full_path}. No email will be sent.")
         return []
 
 
@@ -27,7 +31,7 @@ def send_daily_kitchen_email():
     )
 
     if not regs:
-        print("No registrations today.")
+        print("Ingen registreringer for i dag.")
         return
 
     names = [user.name for reg, user in regs]
