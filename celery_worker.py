@@ -1,6 +1,5 @@
 from celery import Celery
 from dgp_intra import create_app
-from dgp_intra.tasks.email_tasks import send_daily_kitchen_email  # This ensures the task is registered
 from celery.schedules import crontab
 
 flask_app = create_app()
@@ -8,8 +7,8 @@ flask_app = create_app()
 def make_celery(app):
     celery = Celery(
         app.import_name,
-        broker=app.config['CELERY_BROKER_URL'],
-        backend=app.config['CELERY_RESULT_BACKEND'],
+        broker=app.config['broker_url'],
+        backend=app.config['result_backend'],
     )
     celery.conf.update(app.config)
 
@@ -21,11 +20,20 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
+print("BROKER:", flask_app.config.get("broker_url"))
+
 celery = make_celery(flask_app)
+
+# Import the function *after* celery is defined to avoid circular imports
+from dgp_intra.tasks.email_tasks import send_daily_kitchen_email as send_email_logic
+
+@celery.task(name='dgp_intra.tasks.email_tasks.send_daily_kitchen_email')
+def send_daily_kitchen_email():
+    return send_email_logic()
 
 celery.conf.beat_schedule = {
     'send-kitchen-email-9am': {
         'task': 'dgp_intra.tasks.email_tasks.send_daily_kitchen_email',
-        'schedule': crontab(hour=9, minute=0, day_of_week='mon-fri'),
+        'schedule': crontab(hour=9, minute=0, day_of_week='mon-sat'),
     },
 }

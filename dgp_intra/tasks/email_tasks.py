@@ -1,7 +1,6 @@
-from celery_worker import celery
 from flask_mail import Message
-from extensions import db, mail
-from models import LunchRegistration, User, WeeklyMenu
+from dgp_intra.extensions import db, mail
+from dgp_intra.models import LunchRegistration, User, WeeklyMenu
 from datetime import date
 import os
 
@@ -17,7 +16,6 @@ def load_recipients(filename="email_recipients.txt"):
         return []
 
 
-@celery.task
 def send_daily_kitchen_email():
     today = date.today()
     iso_week = today.strftime("%Y-W%V")
