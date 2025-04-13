@@ -174,17 +174,27 @@ def change_password():
 
     return render_template('change_password.html')
 
-
 @user_bp.route('/send_test_email')
 @login_required
 def send_test_email():
-    msg = Message("Lunch App Test Email",
-                  recipients=[current_user.email])
-    msg.body = f"Hi {current_user.name},\n\nThis is a test email from your lunch registration app."
+    msg = Message(
+        "Lunch App Test Email",
+        recipients=[current_user.email],
+        body=f"Hi {current_user.name},\n\nThis is a test email from your lunch registration app."
+    )
     mail.send(msg)
-
-    flash("Test email sent to {{ current_user.email }}!")
+    flash("Test email sent to your address!")
     return redirect(url_for('user.dashboard'))
+
+@user_bp.route('/send_test_email_api')
+@login_required
+def send_test_email_api():
+    from dgp_intra.tasks.email_tasks_api import send_daily_kitchen_email_api
+    send_daily_kitchen_email_api()
+    flash("Test email sent via Mailgun API!")
+    return redirect(url_for('user.dashboard'))
+
+
 
 @user_bp.route('/vacation', methods=['POST'])
 @login_required
@@ -223,4 +233,3 @@ def delete_vacation(vacation_id):
     db.session.commit()
     flash("Fraværet er slettet.", "success")
     return redirect(url_for('user.dashboard'))
-

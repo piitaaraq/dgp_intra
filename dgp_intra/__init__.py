@@ -1,21 +1,18 @@
 from flask import Flask
-from dotenv import load_dotenv
-import os
 from config import Config
 from .extensions import db, login_manager, mail, celery
 from .routes import auth_bp, user_bp, admin_bp
 from .models import User
+from dotenv import load_dotenv
 
 
 def create_app():
     load_dotenv()
-
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Set Celery config keys
-    app.config['broker_url'] = os.environ.get('CELERY_BROKER_URL')
-    app.config['result_backend'] = os.environ.get('CELERY_RESULT_BACKEND')
+    app.config['broker_url'] = app.config.get('CELERY_BROKER_URL')
+    app.config['result_backend'] = app.config.get('CELERY_RESULT_BACKEND')
 
     # Initialize extensions
     db.init_app(app)
@@ -49,4 +46,3 @@ def create_app():
     return app
 
 create_app = create_app
-

@@ -34,6 +34,6 @@ def send_daily_kitchen_email():
 celery.conf.beat_schedule = {
     'send-kitchen-email-9am': {
         'task': 'dgp_intra.tasks.email_tasks.send_daily_kitchen_email',
-        'schedule': crontab(hour=9, minute=0, day_of_week='mon-sat'),
+        'schedule': crontab(hour=7, minute=0, day_of_week='mon-fri'),
     },
 }
