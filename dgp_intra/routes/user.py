@@ -66,7 +66,7 @@ def register_lunch(date):
     today = datetime.today().date()
     now = datetime.now().time()
 
-    if reg_date == today and now >= time(9, 0):
+    if reg_date == today and now >= time(7, 0):
         flash("Registrering er lukket for i dag (efter kl. 9).")
         return redirect(url_for('user.dashboard'))
 
@@ -102,7 +102,7 @@ def add_plus_one(date):
     today = datetime.today().date()
     now = datetime.now().time()
 
-    if reg_date == today and now >= time(9, 0):
+    if reg_date == today and now >= time(7, 0):
         flash("Du kan ikke tilføje ekstra frokost efter kl. 9.")
         return redirect(url_for('user.dashboard'))
 
@@ -133,7 +133,7 @@ def cancel_registration(date):
     today = datetime.today().date()
     now = datetime.now().time()
 
-    if reg_date == today and now >= time(9, 0):
+    if reg_date == today and now >= time(7, 0):
         flash("Du kan ikke afmelde efter kl. 9.")
         return redirect(url_for('user.dashboard'))
 
