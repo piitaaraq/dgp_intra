@@ -63,22 +63,33 @@ def register_lunch(date):
     except ValueError:
         abort(400)
 
+    today = datetime.today().date()
+    now = datetime.now().time()
+
+    if reg_date == today and now >= time(9, 0):
+        flash("Registrering er lukket for i dag (efter kl. 9).")
+        return redirect(url_for('user.dashboard'))
+
     existing = LunchRegistration.query.filter_by(user_id=current_user.id, date=reg_date).first()
     if existing:
         flash("Already registered for that day.")
         return redirect(url_for('user.dashboard'))
 
-    if current_user.credit < 1:
+    if reg_date.weekday() != 2 and current_user.credit < 1:  # Wednesday check
         flash("Not enough credit to register.")
         return redirect(url_for('user.dashboard'))
 
     reg = LunchRegistration(date=reg_date, user_id=current_user.id)
     db.session.add(reg)
-    current_user.credit -= 1
+
+    if reg_date.weekday() != 2:
+        current_user.credit -= 1
+
     db.session.commit()
 
     flash(f"Registered for lunch on {reg_date.strftime('%A %d/%m')}")
     return redirect(url_for('user.dashboard'))
+
 
 @user_bp.route('/plus_one/<date>', methods=['POST'])
 @login_required
@@ -88,14 +99,23 @@ def add_plus_one(date):
     except ValueError:
         abort(400)
 
-    if current_user.credit < 1:
+    today = datetime.today().date()
+    now = datetime.now().time()
+
+    if reg_date == today and now >= time(9, 0):
+        flash("Du kan ikke tilføje ekstra frokost efter kl. 9.")
+        return redirect(url_for('user.dashboard'))
+
+    if reg_date.weekday() != 2 and current_user.credit < 1:  # Wednesday check
         flash("Not enough credit to add an extra registration.")
         return redirect(url_for('user.dashboard'))
 
-    # Add an extra registration (could be flagged differently in future if needed)
     plus_one = LunchRegistration(date=reg_date, user_id=current_user.id)
     db.session.add(plus_one)
-    current_user.credit -= 1
+
+    if reg_date.weekday() != 2:
+        current_user.credit -= 1
+
     db.session.commit()
 
     flash(f"Added an extra meal for {reg_date.strftime('%A %d/%m')}")
@@ -110,17 +130,31 @@ def cancel_registration(date):
     except ValueError:
         abort(400)
 
+    today = datetime.today().date()
+    now = datetime.now().time()
+
+    if reg_date == today and now >= time(9, 0):
+        flash("Du kan ikke afmelde efter kl. 9.")
+        return redirect(url_for('user.dashboard'))
+
+    if reg_date < today:
+        flash("Du kan ikke afmelde tidligere dage.")
+        return redirect(url_for('user.dashboard'))
+
     registration = LunchRegistration.query.filter_by(user_id=current_user.id, date=reg_date).first()
 
     if not registration:
-        flash("You have no registration for that date.")
+        flash("Du er ikke tilmeldt den dag.")
         return redirect(url_for('user.dashboard'))
 
     db.session.delete(registration)
-    current_user.credit += 1
+
+    if reg_date.weekday() != 2:  # Don't refund credit for Wednesdays
+        current_user.credit += 1
+
     db.session.commit()
 
-    flash(f"Your registration for {reg_date.strftime('%A %d/%m')} has been cancelled.")
+    flash(f"Din tilmelding til {reg_date.strftime('%A %d/%m')} er annulleret.")
     return redirect(url_for('user.dashboard'))
 
 @user_bp.route('/buy', methods=['GET', 'POST'])
@@ -186,13 +220,6 @@ def send_test_email():
     flash("Test email sent to your address!")
     return redirect(url_for('user.dashboard'))
 
-@user_bp.route('/send_test_email_api')
-@login_required
-def send_test_email_api():
-    from dgp_intra.tasks.email_tasks_api import send_daily_kitchen_email_api
-    send_daily_kitchen_email_api()
-    flash("Test email sent via Mailgun API!")
-    return redirect(url_for('user.dashboard'))
 
 
 
