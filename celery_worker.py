@@ -1,6 +1,11 @@
+import os
+import time
 from celery import Celery
 from dgp_intra import create_app
 from celery.schedules import crontab
+
+os.environ['TZ'] = 'Europe/Copenhagen'
+time.tzset()
 
 flask_app = create_app()
 
@@ -11,6 +16,7 @@ def make_celery(app):
         backend=app.config['result_backend'],
     )
     celery.conf.update(app.config)
+    celery.conf.task_default_queue = 'dgp_intra'
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
@@ -34,6 +40,8 @@ def send_daily_kitchen_email():
 celery.conf.beat_schedule = {
     'send-kitchen-email-9am': {
         'task': 'dgp_intra.tasks.email_tasks.send_daily_kitchen_email',
-        'schedule': crontab(hour=9, minute=0, day_of_week='mon-fri'),
+        'schedule': crontab(hour=7, minute=0, day_of_week='mon-fri'), # 7am utc and 9am cest
+#        'schedule': crontab(minute='*/5'),  # every 5 minutes
+
     },
 }

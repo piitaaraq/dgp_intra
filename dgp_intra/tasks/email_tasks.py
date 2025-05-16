@@ -1,10 +1,11 @@
 # dgp_intra/tasks/email_tasks.py
 from flask_mail import Message
+import datetime
 from datetime import date
 import os
-
 from dgp_intra.extensions import db, mail
 from dgp_intra.models import LunchRegistration, User, WeeklyMenu
+
 
 def load_recipients(filename="email_recipients.txt"):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,6 +19,7 @@ def load_recipients(filename="email_recipients.txt"):
         return []
 
 def send_daily_kitchen_email():
+    print("[Kitchen Email] Running at:", datetime.datetime.now().isoformat())
     today = date.today()
     iso_week = today.strftime("%Y-W%V")
     weekday = today.weekday()
