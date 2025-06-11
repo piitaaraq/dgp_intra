@@ -1,8 +1,8 @@
 # routes/user.py
 from flask import Blueprint, render_template, redirect, url_for, request, flash, abort
 from flask_login import login_required, current_user
-from ..models import LunchRegistration, WeeklyMenu, Vacation, User
-from datetime import datetime, timedelta, time 
+from ..models import LunchRegistration, WeeklyMenu, Vacation, User, Event, EventRegistration
+from datetime import datetime, timedelta, time, date 
 
 from flask_mail import Message
 from ..extensions import mail, db
@@ -29,6 +29,20 @@ def dashboard():
         r.date for r in LunchRegistration.query.filter_by(user_id=current_user.id).all()
     }
 
+    next_event = (
+    Event.query
+    .filter(Event.date >= today.date())
+    .order_by(Event.date.asc(), Event.time.asc())
+    .first()
+    )
+
+    user_registrations = {r.event_id for r in current_user.event_registrations}
+
+    if next_event:
+        days_left = (next_event.date - today.date()).days
+    else:
+        days_left = None
+
     iso_week = today.strftime("%Y-W%V")
     weekly_menu = WeeklyMenu.query.filter_by(week=iso_week).first()
     user_vacations = Vacation.query.filter_by(user_id=current_user.id).order_by(Vacation.start_date).all()
@@ -51,7 +65,11 @@ def dashboard():
         today_vacations=today_vacations,
         current_date=today.date(),
         current_time=now.time(),
-        time = time
+        time = time,
+        next_event=next_event,
+        user_registrations=user_registrations,
+        days_left=days_left,
+
     )
 
 
@@ -260,3 +278,132 @@ def delete_vacation(vacation_id):
     db.session.commit()
     flash("Fraværet er slettet.", "success")
     return redirect(url_for('user.dashboard'))
+
+@user_bp.route('/events/create', methods=['GET', 'POST'])
+@login_required
+def create_event():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        date_str = request.form.get('date')
+        time_str = request.form.get('time')
+
+        if not name or not date_str or not time_str:
+            flash("Udfyld venligst alle felter.", "danger")
+            return redirect(url_for('user.create_event'))
+
+        try:
+            event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            event_time = datetime.strptime(time_str, '%H:%M').time()
+        except ValueError:
+            flash("Forkert dato eller tidspunkt.", "danger")
+            return redirect(url_for('user.create_event'))
+        
+        deadline_str = request.form.get('deadline')
+        deadline = None
+        if deadline_str:
+            try:
+                deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
+            except ValueError:
+                flash("Ugyldig tilmeldingsfrist.", "danger")
+                return redirect(url_for('user.create_event'))
+
+
+        event = Event(
+            name=name,
+            date=event_date,
+            time=event_time,
+            deadline=deadline,
+            organizer_id=current_user.id
+        )
+        db.session.add(event)
+        db.session.commit()
+
+        flash("Arrangementet er oprettet!", "success")
+        return redirect(url_for('user.events'))
+
+    return render_template('create_event.html')
+
+
+@user_bp.route('/events')
+@login_required
+def events():
+    current_date = date.today()
+
+    six_months_from_now = date.today() + timedelta(days=180)
+    events = Event.query.filter(
+        Event.date >= date.today(),
+        Event.date <= six_months_from_now
+    ).order_by(Event.date, Event.time).all()
+
+    user_registrations = {r.event_id for r in current_user.event_registrations}
+
+    return render_template(
+        'events.html',
+        events=events,
+        user_registrations=user_registrations,
+        current_date=current_date
+    )
+
+@user_bp.route('/events/register/<int:event_id>', methods=['POST'])
+@login_required
+def register_for_event(event_id):
+    existing = EventRegistration.query.filter_by(user_id=current_user.id, event_id=event_id).first()
+    if existing:
+        flash("Du er allerede tilmeldt dette arrangement.")
+    else:
+        registration = EventRegistration(user_id=current_user.id, event_id=event_id)
+        db.session.add(registration)
+        db.session.commit()
+        flash("Du er tilmeldt arrangementet.")
+
+    return redirect(url_for('user.events'))
+
+@user_bp.route('/events/unregister/<int:event_id>', methods=['POST'])
+@login_required
+def unregister_for_event(event_id):
+    registration = EventRegistration.query.filter_by(
+        user_id=current_user.id,
+        event_id=event_id
+    ).first()
+
+    if not registration:
+        flash("Du er ikke tilmeldt dette arrangement.", "warning")
+    else:
+        db.session.delete(registration)
+        db.session.commit()
+        flash("Du er afmeldt arrangementet.", "success")
+
+    return redirect(url_for('user.events'))
+
+@user_bp.route('/events/delete/<int:event_id>', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    event = Event.query.get_or_404(event_id)
+
+    # Only the organizer can delete
+    if event.organizer_id != current_user.id:
+        flash("Du har ikke tilladelse til at slette dette arrangement.", "danger")
+        return redirect(url_for('user.events'))
+
+    db.session.delete(event)
+    db.session.commit()
+    flash("Arrangementet er slettet.", "success")
+
+    return redirect(url_for('user.events'))
+
+@user_bp.route('/events/<int:event_id>')
+@login_required
+def event_detail(event_id):
+    event = Event.query.get_or_404(event_id)
+    registrations = EventRegistration.query.filter_by(event_id=event.id).all()
+    registered_users = [r.user for r in registrations]
+
+    is_registered = any(r.user_id == current_user.id for r in registrations)
+
+    return render_template(
+        'event_detail.html',
+        event=event,
+        registered_users=registered_users,
+        is_registered=is_registered
+    )
+

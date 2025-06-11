@@ -58,3 +58,28 @@ class Vacation(db.Model):
 
     def __repr__(self):
         return f"<Vacation {self.user.name}: {self.start_date} to {self.end_date}>"
+    
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    time = db.Column(db.Time, nullable=False)
+    deadline = db.Column(db.Date, nullable=True)
+    
+    organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    organizer = db.relationship('User', backref='organized_events')
+
+    registrations = db.relationship('EventRegistration', back_populates='event', cascade="all, delete-orphan")
+
+
+class EventRegistration(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+
+    user = db.relationship('User', backref='event_registrations')
+    event = db.relationship('Event', back_populates='registrations')
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'event_id', name='unique_event_registration'),
+    )

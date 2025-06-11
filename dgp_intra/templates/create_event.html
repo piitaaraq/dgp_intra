@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Opret nyt arrangement</h2>
+
+<form method="POST" action="{{ url_for('user.create_event') }}">
+    <label for="name">Navn:</label><br>
+    <input type="text" name="name" id="name" required><br><br>
+
+    <label for="date">Dato:</label><br>
+    <input type="date" name="date" id="date" required><br><br>
+
+    <label for="time">Tidspunkt:</label><br>
+    <input type="time" name="time" id="time" required><br><br>
+
+    <label for="deadline">Tilmeldingsfrist:</label><br>
+    <input type="date" name="deadline" id="deadline"><br><br>
+
+
+    <button type="submit">Opret arrangement</button>
+</form>
+
+<a href="{{ url_for('user.events') }}">← Tilbage til arrangementer</a>
+{% endblock %}

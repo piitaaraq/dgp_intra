@@ -106,6 +106,52 @@
             </ul>
 
         </div>
+        <hr>
+        <h3>Events</h3>
+        {% if next_event %}
+        <div class="card mb-3">
+            <div class="card-header text-bg-warning text-center">
+                {% if days_left == 0 %}
+                Arrangementet er i dag!
+                {% elif days_left == 1 %}
+                Om 1 dag
+                {% elif days_left > 1 %}
+                Om {{ days_left }} dage
+                {% else %}
+                Arrangementet er overstået
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ next_event.name }}</h5>
+                <h6 class="card-subtitle mb-2 text-body-secondary">Arrangør: {{ next_event.organizer.name }}</h6>
+                <p class="card-text">
+                    {{ next_event.date.strftime('%d-%m-%Y') }} kl. {{ next_event.time.strftime('%H:%M') }}
+                </p>
+                {% if next_event.deadline %}
+                <p class="text-muted mb-2">Tilmeldingsfrist: {{ next_event.deadline.strftime('%d-%m-%Y') }}</p>
+                {% endif %}
+
+                {% if next_event.id in user_registrations %}
+                <div class="card-footer text-bg-success text-center">Tilmeldt</div>
+                <form action="{{ url_for('user.unregister_for_event', event_id=next_event.id) }}" method="post"
+                    class="mt-2">
+                    <button class="btn btn-light btn-sm w-100" type="submit">Afmeld</button>
+                </form>
+                {% elif next_event.deadline and next_event.deadline <= current_date %} <p class="text-muted">
+                    Tilmeldingsfristen er udløbet</p>
+                    {% else %}
+                    <form action="{{ url_for('user.register_for_event', event_id=next_event.id) }}" method="post">
+                        <button class="btn btn-outline-primary btn-sm w-100" type="submit">Tilmeld</button>
+                    </form>
+                    {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted">Ingen kommende arrangementer.</p>
+        {% endif %}
+
+        <a class="btn btn-sm btn-link" href="{{ url_for('user.events') }}">Se alle arrangementer</a>
+
     </div>
 </div>
 {% endblock %}
