@@ -137,6 +137,9 @@
                 <h6 class="card-subtitle mb-2 text-body-secondary">Arrangør: {{ next_event.organizer.name }}</h6>
                 <p class="card-text">
                     {{ next_event.date.strftime('%d-%m-%Y') }} kl. {{ next_event.time.strftime('%H:%M') }}
+                    <br>
+                    <a href="{{ url_for('user.event_detail', event_id=next_event.id) }}"
+                        class="btn btn-sm btn-outline-secondary mt-2">Se mere</a>
                 </p>
                 {% if next_event.deadline %}
                 <p class="text-muted mb-2">Tilmeldingsfrist: {{ next_event.deadline.strftime('%d-%m-%Y') }}</p>

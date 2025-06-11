@@ -2,23 +2,28 @@
 
 {% block content %}
 <h2>Opret nyt arrangement</h2>
+<p>
+    Her kan du oprette et nyt arrangement. Udfyld formularen nedenfor med arrangementets navn, dato, tidspunkt og
+    eventuel tilmeldingsfrist. Når du har oprettet arrangementet, vil det blive vist på siden med kommende
+    arrangementer.
+</p>
 
-<form method="POST" action="{{ url_for('user.create_event') }}">
-    <label for="name">Navn:</label><br>
-    <input type="text" name="name" id="name" required><br><br>
+<form class="mb-3" method="POST" action="{{ url_for('user.create_event') }}">
+    <label class="form-label" for="name">Navn:</label><br>
+    <input class="form-control" type="text" name="name" id="name" required><br><br>
 
-    <label for="date">Dato:</label><br>
-    <input type="date" name="date" id="date" required><br><br>
+    <label class="form-label" for="date">Dato:</label><br>
+    <input class="form-control" type="date" name="date" id="date" required><br><br>
 
-    <label for="time">Tidspunkt:</label><br>
-    <input type="time" name="time" id="time" required><br><br>
+    <label class="form-label" for="time">Tidspunkt:</label><br>
+    <input class="form-control" type="time" name="time" id="time" required><br><br>
 
-    <label for="deadline">Tilmeldingsfrist:</label><br>
-    <input type="date" name="deadline" id="deadline"><br><br>
+    <label class="form-label" for="deadline">Tilmeldingsfrist:</label><br>
+    <input class="form-control" type="date" name="deadline" id="deadline"><br><br>
 
 
-    <button type="submit">Opret arrangement</button>
+    <button class="btn btn-light" type="submit">Opret arrangement</button>
 </form>
-
+<hr>
 <a href="{{ url_for('user.events') }}">← Tilbage til arrangementer</a>
 {% endblock %}
