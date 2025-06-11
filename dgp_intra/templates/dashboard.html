@@ -1,31 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - DgP Frokost{% endblock %}
+{% block title %}Dashboard - DgP Intra{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-lg-8">
         <h2>Velkommen, {{ current_user.name }}!</h2>
-        <div class="card mb-4">
-            <div class="card-header">Dine registrerede ferier</div>
-            <ul class="list-group list-group-flush">
-                {% for vac in user_vacations %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>
-                        {{ vac.start_date.strftime('%d/%m') }} – {{ vac.end_date.strftime('%d/%m') }}
-                    </span>
-                    <form method="POST" action="{{ url_for('user.delete_vacation', vacation_id=vac.id) }}" class="mb-0">
-                        <button onclick="return confirm('Er du sikker på, at du vil slette denne periode?')"
-                            type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
-                    </form>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-
+        <h4 class="mt-4">Frokosttilmelding</h4>
+        <p>
+            Nedenunder kan du se ugens frokostmenu. Du kan tilmelde dig frokost eller afmelde dig, hvis du allerede er
+            tilmeldt. Bemærk, at du kun kan tilmelde dig frokost for den pågældende uge vi er i.
+        </p>
+        <p>
+            Dagens ret bliver vist hvis køkkenet har opdateret den.
+        </p>
         <p>Dine klip: <strong>{{ current_user.credit }}</strong></p>
-
-
-        <h4 class="mt-4">Ugemenu</h4>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mt-2">
             {% for i in range(5) %}
             {% set date = dates[i] %}
@@ -74,8 +62,14 @@
             </div>
             {% endfor %}
         </div>
+        <hr>
 
         <h4 class="mt-4">Registrer ferie eller fravær</h4>
+        <p>
+            Du kan registrere ferie eller fravær her. Du skal blot huske at registreringen kun er til at informere
+            resten af huset om, at du ikke er til stede. Det er ikke en officiel ferieanmodning, og du skal stadig følge
+            de normale procedurer for ferieanmodninger.
+        </p>
         <form method="POST" action="{{ url_for('user.add_vacation') }}" class="row g-3 mb-3">
             <div class="col-md-5">
                 <label for="start_date" class="form-label">Startdato</label>
@@ -89,10 +83,22 @@
                 <button type="submit" class="btn btn-primary w-100">Gem</button>
             </div>
         </form>
-
-    </div>
-    <div class="col-lg-4 border-start ps-3">
-        <h2>Om huset</h2>
+        <div class="card mb-4">
+            <div class="card-header">Dine registrerede ferier</div>
+            <ul class="list-group list-group-flush">
+                {% for vac in user_vacations %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        {{ vac.start_date.strftime('%d/%m') }} – {{ vac.end_date.strftime('%d/%m') }}
+                    </span>
+                    <form method="POST" action="{{ url_for('user.delete_vacation', vacation_id=vac.id) }}" class="mb-0">
+                        <button onclick="return confirm('Er du sikker på, at du vil slette denne periode?')"
+                            type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
         <div class="card mb-4">
             <div class="card-header">Ferie-/fridage i organisationen i dag</div>
             <ul class="list-group list-group-flush">
@@ -106,11 +112,16 @@
             </ul>
 
         </div>
-        <hr>
+
+    </div>
+    <div class="col-lg-4 border-start ps-3">
         <h3>Events</h3>
+        <p>
+            Det næste arrangement er:
+        </p>
         {% if next_event %}
         <div class="card mb-3">
-            <div class="card-header text-bg-warning text-center">
+            <div class="card-header text-center">
                 {% if days_left == 0 %}
                 Arrangementet er i dag!
                 {% elif days_left == 1 %}
@@ -149,6 +160,10 @@
         {% else %}
         <p class="text-muted">Ingen kommende arrangementer.</p>
         {% endif %}
+        <p>
+            Der kan være flere arrangementer på samme dag eller senere end ovenstående. Så husk at tjekke
+            <a href="{{ url_for('user.events') }}">arrangementssiden</a> for at se alle arrangementer.
+        </p>
 
         <a class="btn btn-sm btn-link" href="{{ url_for('user.events') }}">Se alle arrangementer</a>
 
