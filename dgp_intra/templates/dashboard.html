@@ -22,7 +22,7 @@
             weekly_menu.friday] %}
 
             <div class="col">
-                <div class="card h-100">
+                <div class="card h-100 rounded-1">
                     <div class="card-header">
                         {{ day_names[i] }} {{ date.strftime('%d/%m') }}
                     </div>
@@ -35,23 +35,23 @@
                             {% if date in registered_dates %}
                             <form action="{{ url_for('user.cancel_registration', date=date.strftime('%Y-%m-%d')) }}"
                                 method="POST">
-                                <button type="submit" class="btn btn-danger w-100 mt-2" {% if is_past or is_locked_today
-                                    %}disabled{% endif %}>
+                                <button type="submit" class="btn btn-danger w-100 mt-2 rounded-1" {% if is_past or
+                                    is_locked_today %}disabled{% endif %}>
                                     Afmeld
                                 </button>
                             </form>
 
                             <form action="{{ url_for('user.add_plus_one', date=date.strftime('%Y-%m-%d')) }}"
                                 method="POST">
-                                <button type="submit" class="btn btn-outline-secondary mt-2" {% if current_user.credit <
-                                    1 or is_past or is_locked_today %}disabled{% endif %}>
+                                <button type="submit" class="btn btn-outline-secondary mt-2 rounded-1" {% if
+                                    current_user.credit < 1 or is_past or is_locked_today %}disabled{% endif %}>
                                     +1
                                 </button>
                             </form>
                             {% else %}
                             <form action="{{ url_for('user.register_lunch', date=date.strftime('%Y-%m-%d')) }}"
                                 method="POST">
-                                <button type="submit" class="btn btn-outline-primary w-100 mt-2" {% if
+                                <button type="submit" class="btn btn-light w-100 mt-2 rounded-1" {% if
                                     current_user.credit < 1 or is_past or is_locked_today %}disabled{% endif %}>
                                     Tilmeld
                                 </button>
@@ -70,7 +70,7 @@
             resten af huset om, at du ikke er til stede. Det er ikke en officiel ferieanmodning, og du skal stadig følge
             de normale procedurer for ferieanmodninger.
         </p>
-        <form method="POST" action="{{ url_for('user.add_vacation') }}" class="row g-3 mb-3">
+        <form method="POST" action="{{ url_for('user.add_vacation') }}" class="row g-3 mb-3 ">
             <div class="col-md-5">
                 <label for="start_date" class="form-label">Startdato</label>
                 <input type="date" class="form-control" name="start_date" required>
@@ -80,10 +80,10 @@
                 <input type="date" class="form-control" name="end_date" required>
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">Gem</button>
+                <button type="submit" class="btn btn-light w-100 rounded-1">Gem</button>
             </div>
         </form>
-        <div class="card mb-4">
+        <div class="card mb-4 rounded-1">
             <div class="card-header">Dine registrerede ferier</div>
             <ul class="list-group list-group-flush">
                 {% for vac in user_vacations %}
@@ -93,13 +93,13 @@
                     </span>
                     <form method="POST" action="{{ url_for('user.delete_vacation', vacation_id=vac.id) }}" class="mb-0">
                         <button onclick="return confirm('Er du sikker på, at du vil slette denne periode?')"
-                            type="submit" class="btn btn-sm btn-outline-danger">Slet</button>
+                            type="submit" class="btn btn-sm btn-outline-danger rounded-1">Slet</button>
                     </form>
                 </li>
                 {% endfor %}
             </ul>
         </div>
-        <div class="card mb-4">
+        <div class="card mb-4 rounded-1">
             <div class="card-header">Ferie-/fridage i organisationen i dag</div>
             <ul class="list-group list-group-flush">
                 {% for vac, user in today_vacations %}
@@ -115,54 +115,44 @@
 
     </div>
     <div class="col-lg-4 border-start ps-3">
-        <h3>Events</h3>
+        <a href="{{ url_for('user.events') }}" class="h3">Events</a>
         <p>
-            Det næste arrangement er:
+            De næste arrangementer:
         </p>
-        {% if next_event %}
-        <div class="card mb-3">
-            <div class="card-header text-center">
-                {% if days_left == 0 %}
-                Arrangementet er i dag!
-                {% elif days_left == 1 %}
-                Om 1 dag
-                {% elif days_left > 1 %}
-                Om {{ days_left }} dage
-                {% else %}
-                Arrangementet er overstået
-                {% endif %}
-            </div>
+        {% if next_events %}
+        {% for event in next_events %}
+        <div class="card mb-3 rounded-1">
             <div class="card-body">
-                <h5 class="card-title">{{ next_event.name }}</h5>
-                <h6 class="card-subtitle mb-2 text-body-secondary">Arrangør: {{ next_event.organizer.name }}</h6>
+                <h5 class="card-title">{{ event.name }}</h5>
+                <h6 class="card-subtitle mb-2 text-body-secondary">Arrangør: {{ event.organizer.name }}</h6>
                 <p class="card-text">
-                    {{ next_event.date.strftime('%d-%m-%Y') }} kl. {{ next_event.time.strftime('%H:%M') }}
-                    <br>
-                    <a href="{{ url_for('user.event_detail', event_id=next_event.id) }}"
+                    {{ event.date.strftime('%d-%m-%Y') }} kl. {{ event.time.strftime('%H:%M') }}<br>
+                    <a href="{{ url_for('user.event_detail', event_id=event.id) }}"
                         class="btn btn-sm btn-outline-secondary mt-2">Se mere</a>
                 </p>
-                {% if next_event.deadline %}
-                <p class="text-muted mb-2">Tilmeldingsfrist: {{ next_event.deadline.strftime('%d-%m-%Y') }}</p>
+                {% if event.deadline %}
+                <p class="text-muted mb-2">Tilmeldingsfrist: {{ event.deadline.strftime('%d-%m-%Y') }}</p>
                 {% endif %}
 
-                {% if next_event.id in user_registrations %}
+                {% if event.id in user_registrations %}
                 <div class="card-footer text-bg-success text-center">Tilmeldt</div>
-                <form action="{{ url_for('user.unregister_for_event', event_id=next_event.id) }}" method="post"
-                    class="mt-2">
-                    <button class="btn btn-light btn-sm w-100" type="submit">Afmeld</button>
+                <form action="{{ url_for('user.unregister_for_event', event_id=event.id) }}" method="post" class="mt-2">
+                    <button class="btn btn-light btn-sm w-100 rounded-1" type="submit">Afmeld</button>
                 </form>
-                {% elif next_event.deadline and next_event.deadline <= current_date %} <p class="text-muted">
-                    Tilmeldingsfristen er udløbet</p>
+                {% elif event.deadline and event.deadline <= current_date %} <p class="text-muted">Tilmeldingsfristen er
+                    udløbet</p>
                     {% else %}
-                    <form action="{{ url_for('user.register_for_event', event_id=next_event.id) }}" method="post">
-                        <button class="btn btn-outline-primary btn-sm w-100" type="submit">Tilmeld</button>
+                    <form action="{{ url_for('user.register_for_event', event_id=event.id) }}" method="post">
+                        <button class="btn btn-light btn-sm w-100" type="submit">Tilmeld</button>
                     </form>
                     {% endif %}
             </div>
         </div>
+        {% endfor %}
         {% else %}
         <p class="text-muted">Ingen kommende arrangementer.</p>
         {% endif %}
+
         <p>
             Der kan være flere arrangementer på samme dag eller senere end ovenstående. Så husk at tjekke
             <a href="{{ url_for('user.events') }}">arrangementssiden</a> for at se alle arrangementer.

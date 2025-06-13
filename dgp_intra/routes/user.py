@@ -36,12 +36,27 @@ def dashboard():
     .first()
     )
 
+    next_events = (
+    Event.query
+    .filter(Event.date >= today.date())
+    .order_by(Event.date.asc(), Event.time.asc())
+    .limit(2)
+    .all()
+    )
+
+
     user_registrations = {r.event_id for r in current_user.event_registrations}
 
     if next_event:
         days_left = (next_event.date - today.date()).days
     else:
         days_left = None
+
+    if next_events:
+        days_left = (next_events[0].date - today.date()).days
+    else:
+        days_left = None
+
 
     iso_week = today.strftime("%Y-W%V")
     weekly_menu = WeeklyMenu.query.filter_by(week=iso_week).first()
@@ -66,7 +81,7 @@ def dashboard():
         current_date=today.date(),
         current_time=now.time(),
         time = time,
-        next_event=next_event,
+        next_events=next_events,
         user_registrations=user_registrations,
         days_left=days_left,
 
