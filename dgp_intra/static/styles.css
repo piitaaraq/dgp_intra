@@ -1,10 +1,10 @@
 :root {
   /* Core palette */
   --bg:        #FEFEFA;  /* background */
-  --brand:     #FFFDD0;  /* brand */
-  --primary:   #555555;  /* primary */
-  --accent-1:  #F3E5AB;  /* soft accent */
-  --accent-2:  #FFF8DC;  /* softer accent */
+  --brand:     #FCA311;  /* brand */
+  --primary:   #000000;  /* primary */
+  --accent-1:  #14213D;  /* soft accent */
+  --accent-2:  #E5E5E5;  /* softer accent */
 
   /* Contrast colors */
   --brand-contrast: #1f1f1f;
@@ -28,6 +28,7 @@
   --bs-link-hover-color: var(--primary-hover);
   --bs-border-color: color-mix(in srgb, #000 8%, var(--bg));
   --bs-card-bg: #fff;
+  --bs-heading-color: var(--accent-1); /* or var(--primary) if you prefer solid black */
 }
 
 /* Brand buttons */
@@ -65,9 +66,17 @@
 .border-accent-1 { border-color: var(--accent-1-border) !important; }
 .border-accent-2 { border-color: var(--accent-2-border) !important; }
 
+.card-header.bg-accent-1 {
+  color: #fff; /* or var(--primary-contrast) if you want consistency */
+}
+.card-header.bg-accent-1 h2,
+.card-header.bg-accent-1 h5 {
+  color: inherit; /* ensures heading follows the header’s text color */
+}
+
 /* Navbar brand font */
 .navbar-brand {
-  font-family: 'Merriweather', serif;
+  /* font-family: 'Merriweather', serif; */
   font-size: 1.5rem; /* default on mobile */
 }
 
