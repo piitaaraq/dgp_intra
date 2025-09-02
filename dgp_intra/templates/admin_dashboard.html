@@ -1,56 +1,106 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}Admin Dashboard – DgP Intra{%
+endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
+'Tuesday': 'Tirsdag', 'Wednesday': 'Onsdag', 'Thursday': 'Torsdag', 'Friday':
+'Fredag', 'Saturday': 'Lørdag', 'Sunday': 'Søndag' } %}
 
-{% block title %}Admin Dashboard{% endblock %}
-
-{% block content %}
-{% set weekdays_da = {
-'Monday': 'Mandag',
-'Tuesday': 'Tirsdag',
-'Wednesday': 'Onsdag',
-'Thursday': 'Torsdag',
-'Friday': 'Fredag',
-'Saturday': 'Lørdag',
-'Sunday': 'Søndag'
-} %}
-
-<h2>Admin Dashboard</h2>
-
-<h4 class="mt-4">Ansatte der mangler at betale for klip</h4>
-{% if users_who_owe %}
-<ul class="list-group mb-4">
-    {% for user in users_who_owe %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        <span>
-            {{ user.name }} ({{ user.email }}) skylder <strong>{{ user.owes }} DKK</strong>
-        </span>
-        <form action="{{ url_for('admin.mark_paid', user_id=user.id) }}" method="POST" class="mb-0">
-            <button type="submit" class="btn btn-sm btn-success">Marker som betalt</button>
-        </form>
-    </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p class="text-muted">Ingen ansatte skylder penge for klip.</p>
-{% endif %}
-
-<h4 class="mt-4">Registreringer til frokost denne uge</h4>
-{% if grouped_registrations %}
-{% for date, users in grouped_registrations.items()|sort %}
-<div class="mb-3">
-    <h6>{{ weekdays_da[date.strftime('%A')] }} — {{ users|length }} registreret</h6>
-    <ul class="list-group">
-        {% for user in users %}
-        <li class="list-group-item">{{ user.name }}</li>
-        {% endfor %}
-    </ul>
+<!-- Hero -->
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+  <h1 class="display-6 fw-semibold mb-2">Admin Dashboard</h1>
+  <p class="mb-0">
+    Overblik over ubetalte klip og ugens frokostregistreringer.
+  </p>
 </div>
-{% endfor %}
-{% else %}
-<p class="text-muted">Ingen har registreret endnu.</p>
-{% endif %}
 
-<div class="mt-4">
-    <a href="{{ url_for('admin.menu_input') }}" class="btn btn-outline-primary ms-2">Gå til Menu Input</a>
-    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">Tilbage til Dashboard</a>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <!-- Owed credits -->
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h2 class="h5 mb-0">Ansatte der mangler at betale for klip</h2>
+      </div>
+
+      {% if users_who_owe %}
+      <ul class="list-group list-group-flush">
+        {% for user in users_who_owe %}
+        <li
+          class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="me-2">
+            <div class="fw-semibold">{{ user.name }}</div>
+            <div class="small text-body-secondary">{{ user.email }}</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border"
+              >Skylder: {{ user.owes }} DKK</span
+            >
+            <form
+              action="{{ url_for('admin.mark_paid', user_id=user.id) }}"
+              method="POST"
+              class="mb-0">
+              <button type="submit" class="btn btn-sm btn-brand rounded-2">
+                Marker som betalt
+              </button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="card-body">
+        <p class="text-muted mb-0">Ingen ansatte skylder penge for klip.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <!-- Weekly registrations -->
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h2 class="h5 mb-0">Registreringer til frokost denne uge</h2>
+      </div>
+
+      <div class="card-body">
+        {% if grouped_registrations %}
+        <div class="d-flex flex-column gap-3">
+          {% for date, users in grouped_registrations.items()|sort %}
+          <div class="border rounded-3">
+            <div class="d-flex justify-content-between align-items-center p-3">
+              <h3 class="h6 mb-0">
+                {{ weekdays_da[date.strftime('%A')] }}
+                <span class="text-body-secondary"
+                  >— {{ date.strftime('%d/%m') }}</span
+                >
+              </h3>
+              <span class="badge bg-light text-dark border"
+                >{{ users|length }} registreret</span
+              >
+            </div>
+            <ul class="list-group list-group-flush">
+              {% for user in users %}
+              <li class="list-group-item">{{ user.name }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Ingen har registreret endnu.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="mt-5" />
+
+<div class="d-flex flex-wrap gap-2">
+  <a href="{{ url_for('admin.menu_input') }}" class="btn btn-primary rounded-2"
+    >Gå til Menu Input</a
+  >
+  <a
+    href="{{ url_for('user.dashboard') }}"
+    class="btn btn-outline-secondary rounded-2"
+    >Tilbage til Dashboard</a
+  >
 </div>
 {% endblock %}

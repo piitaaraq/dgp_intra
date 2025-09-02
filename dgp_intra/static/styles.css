@@ -1,0 +1,125 @@
+:root {
+  /* Core palette */
+  --bg:        #FEFEFA;  /* background */
+  --brand:     #FFFDD0;  /* brand */
+  --primary:   #555555;  /* primary */
+  --accent-1:  #F3E5AB;  /* soft accent */
+  --accent-2:  #FFF8DC;  /* softer accent */
+
+  /* Contrast colors */
+  --brand-contrast: #1f1f1f;
+  --primary-contrast: #ffffff;
+
+  /* Derived shades */
+  --brand-hover:  color-mix(in srgb, var(--brand) 88%, black 12%);
+  --brand-border: color-mix(in srgb, var(--brand) 70%, black 30%);
+  --primary-hover: color-mix(in srgb, var(--primary) 92%, black 8%);
+  --primary-border: color-mix(in srgb, var(--primary) 85%, white 15%);
+
+  --accent-1-border: color-mix(in srgb, var(--accent-1) 70%, black 30%);
+  --accent-2-border: color-mix(in srgb, var(--accent-2) 65%, black 35%);
+
+  /* Bootstrap overrides */
+  --bs-body-bg: var(--bg);
+  --bs-body-color: #2a2a2a;
+  --bs-primary: var(--primary);
+  --bs-primary-rgb: 85, 85, 85;
+  --bs-link-color: var(--primary);
+  --bs-link-hover-color: var(--primary-hover);
+  --bs-border-color: color-mix(in srgb, #000 8%, var(--bg));
+  --bs-card-bg: #fff;
+}
+
+/* Brand buttons */
+.btn-brand {
+  --bs-btn-bg: var(--brand);
+  --bs-btn-border-color: var(--brand-border);
+  --bs-btn-hover-bg: var(--brand-hover);
+  --bs-btn-hover-border-color: var(--brand-border);
+  --bs-btn-color: var(--brand-contrast);
+  --bs-btn-hover-color: var(--brand-contrast);
+}
+
+/* Primary buttons (overrides bootstrap default) */
+.btn-primary {
+  --bs-btn-bg: var(--primary);
+  --bs-btn-border-color: var(--primary-border);
+  --bs-btn-hover-bg: var(--primary-hover);
+  --bs-btn-hover-border-color: var(--primary-hover);
+  --bs-btn-color: var(--primary-contrast);
+  --bs-btn-hover-color: var(--primary-contrast);
+}
+
+/* Background utilities */
+.bg-brand {
+  background-color: var(--brand) !important;
+  color: var(--brand-contrast) !important;
+}
+.text-bg-brand {
+  background-color: var(--brand) !important;
+  color: var(--brand-contrast) !important;
+}
+
+.bg-accent-1 { background-color: var(--accent-1) !important; }
+.bg-accent-2 { background-color: var(--accent-2) !important; }
+.border-accent-1 { border-color: var(--accent-1-border) !important; }
+.border-accent-2 { border-color: var(--accent-2-border) !important; }
+
+/* Navbar brand font */
+.navbar-brand {
+  font-family: 'Merriweather', serif;
+  font-size: 1.5rem; /* default on mobile */
+}
+
+@media (min-width: 992px) { /* lg and up */
+  .navbar-brand {
+    font-size: 2rem;
+  }
+}
+
+/* place this AFTER your .navbar-brand rule */
+.navbar .navbar-brand > span {
+  font-family: var(--bs-body-font-family, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif) !important;
+  /* font-style: italic; */
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--bs-body-color);
+}
+
+.navbar-brand img {
+  height: 28px;   /* default */
+}
+@media (min-width: 992px) { /* lg and up */
+  .navbar-brand img {
+    height: 32px;
+  }
+}
+
+
+
+
+/* Softer section headers */
+.card-header.bg-body-tertiary {
+  border-bottom: 0;
+}
+
+/* Subtle alert */
+.alert-warning-subtle {
+  background: rgba(254, 198, 1, 0.12);
+  color: #6a5c00;
+  border-left: 4px solid var(--accent-1-border);
+  border-radius: .75rem;
+}
+
+/* Hero helper */
+.hero {
+  border-radius: 1rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+

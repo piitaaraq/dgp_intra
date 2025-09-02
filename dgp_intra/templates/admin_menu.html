@@ -1,33 +1,86 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}Ugemenu – DgP Intra{% endblock %} {%
+block content %}
+<!-- Hero -->
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+  <h1 class="display-6 fw-semibold mb-2">Ugemenu for uge {{ current_week }}</h1>
+  <p class="mb-0">Opdater køkkenets frokostmenu for denne uge.</p>
+</div>
 
-{% block title %}Ugemenu{% endblock %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm rounded-3">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h2 class="h5 mb-0">Rediger menu</h2>
+      </div>
+      <div class="card-body">
+        <form method="POST" class="d-flex flex-column gap-3">
+          <input
+            type="hidden"
+            name="next"
+            value="{{ url_for('admin.menu_input') }}" />
+          <div>
+            <label class="form-label fw-semibold" for="monday">Mandag</label>
+            <input
+              type="text"
+              id="monday"
+              name="monday"
+              class="form-control rounded-2"
+              value="{{ menu.monday if menu else '' }}" />
+          </div>
 
-{% block content %}
-<h2>Ugemenu for {{ current_week }}</h2>
+          <div>
+            <label class="form-label fw-semibold" for="tuesday">Tirsdag</label>
+            <input
+              type="text"
+              id="tuesday"
+              name="tuesday"
+              class="form-control rounded-2"
+              value="{{ menu.tuesday if menu else '' }}" />
+          </div>
 
-<form method="POST">
-    <div class="mb-3">
-        <label class="form-label">Mandag</label>
-        <input type="text" name="monday" class="form-control" value="{{ menu.monday if menu else '' }}">
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Tirsdag</label>
-        <input type="text" name="tuesday" class="form-control" value="{{ menu.tuesday if menu else '' }}">
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Onsdag</label>
-        <input type="text" name="wednesday" class="form-control" value="{{ menu.wednesday if menu else '' }}">
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Torsdag</label>
-        <input type="text" name="thursday" class="form-control" value="{{ menu.thursday if menu else '' }}">
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Fredag</label>
-        <input type="text" name="friday" class="form-control" value="{{ menu.friday if menu else '' }}">
-    </div>
+          <div>
+            <label class="form-label fw-semibold" for="wednesday">Onsdag</label>
+            <input
+              type="text"
+              id="wednesday"
+              name="wednesday"
+              class="form-control rounded-2"
+              value="{{ menu.wednesday if menu else '' }}" />
+          </div>
 
-    <button type="submit" class="btn btn-primary">Gem Menu</button>
-    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary ms-2">Tilbage Admin Dashboard</a>
-</form>
+          <div>
+            <label class="form-label fw-semibold" for="thursday">Torsdag</label>
+            <input
+              type="text"
+              id="thursday"
+              name="thursday"
+              class="form-control rounded-2"
+              value="{{ menu.thursday if menu else '' }}" />
+          </div>
+
+          <div>
+            <label class="form-label fw-semibold" for="friday">Fredag</label>
+            <input
+              type="text"
+              id="friday"
+              name="friday"
+              class="form-control rounded-2"
+              value="{{ menu.friday if menu else '' }}" />
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <button type="submit" class="btn btn-brand rounded-2">
+              Gem menu
+            </button>
+            <a
+              href="{{ url_for('admin.admin_dashboard') }}"
+              class="btn btn-outline-secondary rounded-2">
+              Tilbage til Admin Dashboard
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

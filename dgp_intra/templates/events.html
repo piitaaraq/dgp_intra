@@ -1,76 +1,107 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}Events – DgP Intra{% endblock %} {%
+block content %}
+<!-- Hero -->
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+  <h1 class="display-6 fw-semibold mb-2">
+    Kommende arrangementer – næste 6 måneder
+  </h1>
+  <p class="fs-5 mb-0">
+    Se planlagte arrangementer, tilmeld/afmeld dig og følg fristerne. Arrangører
+    kan slette egne arrangementer.
+  </p>
+</div>
 
-{% block content %}
-<h2 class="mb-4">Kommende arrangementer - næste 6 måneder</h2>
-<p>
-    Disse er de arrangementer, der er planlagt de næste 6 måneder. Du kan tilmelde dig arrangementer, du er interesseret
-    i, og afmelde dig, hvis du ikke længere kan deltage. På hvert arrangement kan du se, hvem der er arrangør, hvornår
-    arrangementet finder sted og hvornår tilmeldingsfristen er. Arrangører kan også slette arrangementer, de har
-    oprettet. Du kan se hvem der har tilmeldt sig, ved at klikke på "Se mere" knappen under hvert
-    arrangement.
-</p>
-<p>
-    For at oprette et arrangement, skal du bruge knappen "Opret nyt arrangement" nedenfor.
-</p>
+<!-- Intro callout -->
+<div class="alert alert-soft mb-4">
+  For at oprette et arrangement, brug knappen
+  <strong>Opret nyt arrangement</strong> nedenfor.
+</div>
 
 {% if events %}
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    {% for event in events %}
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">{{ event.name }}</h5>
-                <h6 class="card-subtitle mb-2 text-body-secondary">Arrangør: {{ event.organizer.name }}</h6>
-                <p class="card-text">
-                    {{ event.date.strftime('%d-%m-%Y') }} kl. {{ event.time.strftime('%H:%M') }}
-                    {% if event.deadline %}
-                <p class="text-muted mb-0">
-                    Tilmeldingsfrist: {{ event.deadline.strftime('%d-%m-%Y') }}
-                </p>
-                {% endif %}
+  {% for event in events %}
+  <div class="col">
+    <div class="card h-100 border-0 shadow-sm rounded-3">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h2 class="h5 mb-0">{{ event.name }}</h2>
+      </div>
 
-                <br>
-                <a href="{{ url_for('user.event_detail', event_id=event.id) }}"
-                    class="btn btn-sm btn-outline-secondary mt-2">Se mere</a>
-                </p>
-
-                {% if event.id in user_registrations %}
-                <form action="{{ url_for('user.unregister_for_event', event_id=event.id) }}" method="post"
-                    class="d-inline">
-                    <button class="btn btn-light btn-sm" type="submit">Afmeld</button>
-                </form>
-                {% elif event.deadline and event.deadline <= current_date %} <span class="text-muted">Tilmeldingsfristen
-                    er udløbet</span>
-                    {% else %}
-                    <form action="{{ url_for('user.register_for_event', event_id=event.id) }}" method="post"
-                        class="d-inline">
-                        <button class="btn btn-light btn-sm" type="submit">Tilmeld</button>
-                    </form>
-                    {% endif %}
-
-                    {% if event.organizer_id == current_user.id %}
-                    <form action="{{ url_for('user.delete_event', event_id=event.id) }}" method="post" class="d-inline"
-                        onsubmit="return confirm('Er du sikker på, at du vil slette dette arrangement?');">
-                        <button class="btn btn-danger btn-sm" type="submit">Slet</button>
-                    </form>
-                    {% endif %}
-            </div>
-
-            {% if event.id in user_registrations %}
-            <div class="card-footer text-bg-success text-center">
-                Tilmeldt
-            </div>
-            {% endif %}
+      <div class="card-body d-flex flex-column">
+        <div class="small text-body-secondary mb-2">
+          Arrangør: {{ event.organizer.name }}
         </div>
+        <div class="mb-2">
+          {{ event.date.strftime('%d-%m-%Y') }} kl. {{
+          event.time.strftime('%H:%M') }}
+        </div>
+
+        {% if event.deadline %}
+        <div class="text-muted small mb-2">
+          Tilmeldingsfrist: {{ event.deadline.strftime('%d-%m-%Y') }}
+        </div>
+        {% endif %}
+
+        <div class="mt-auto d-grid gap-2">
+          <a
+            href="{{ url_for('user.event_detail', event_id=event.id) }}"
+            class="btn btn-outline-secondary btn-sm rounded-2">
+            Se mere
+          </a>
+
+          {% if event.id in user_registrations %}
+          <form
+            action="{{ url_for('user.unregister_for_event', event_id=event.id) }}"
+            method="post">
+            <button class="btn btn-light btn-sm w-100 rounded-2" type="submit">
+              Afmeld
+            </button>
+          </form>
+          {% elif event.deadline and event.deadline <= current_date %}
+          <div class="text-muted small">Tilmeldingsfristen er udløbet</div>
+          {% else %}
+          <form
+            action="{{ url_for('user.register_for_event', event_id=event.id) }}"
+            method="post">
+            <button class="btn btn-brand btn-sm w-100 rounded-2" type="submit">
+              Tilmeld
+            </button>
+          </form>
+          {% endif %} {% if event.organizer_id == current_user.id %}
+          <form
+            action="{{ url_for('user.delete_event', event_id=event.id) }}"
+            method="post"
+            onsubmit="return confirm('Er du sikker på, at du vil slette dette arrangement?');">
+            <button
+              class="btn btn-outline-danger btn-sm w-100 rounded-2"
+              type="submit">
+              Slet
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if event.id in user_registrations %}
+      <div class="card-footer text-bg-success text-center rounded-bottom-3">
+        Tilmeldt
+      </div>
+      {% endif %}
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
 </div>
 {% else %}
-<p>Ingen arrangementer fundet.</p>
+<div class="alert alert-soft">Ingen arrangementer fundet.</div>
 {% endif %}
 
-<hr class="mt-5">
+<hr class="mt-5" />
 
-<a class="btn btn-link" href="{{ url_for('user.dashboard') }}">← Tilbage til dashboard</a>
-<a class="btn btn-link" href="{{ url_for('user.create_event') }}">Opret nyt arrangement</a>
+<div class="d-flex flex-wrap gap-2">
+  <a class="btn btn-link" href="{{ url_for('user.dashboard') }}"
+    >← Tilbage til dashboard</a
+  >
+  <a class="btn btn-primary" href="{{ url_for('user.create_event') }}"
+    >Opret nyt arrangement</a
+  >
+</div>
 {% endblock %}

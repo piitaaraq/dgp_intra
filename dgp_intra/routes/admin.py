@@ -6,6 +6,7 @@ from ..models import User, LunchRegistration, WeeklyMenu
 from datetime import datetime, timedelta
 from collections import defaultdict
 from datetime import date
+from urllib.parse import urlparse, urljoin
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -60,15 +61,18 @@ def mark_paid(user_id):
     return redirect(url_for('admin.admin_dashboard'))
 
 
+def is_safe_url(target):
+    host_url = request.host_url
+    test_url = urljoin(host_url, target)
+    return urlparse(test_url).scheme in ('http', 'https') and urlparse(host_url).netloc == urlparse(test_url).netloc
+
 @admin_bp.route('/menu', methods=['GET', 'POST'])
 @login_required
 def menu_input():
     if not current_user.is_admin:
         abort(403)
 
-    # Get ISO week string for today
     current_week = date.today().strftime("%Y-W%V")
-
     menu = WeeklyMenu.query.filter_by(week=current_week).first()
 
     if request.method == 'POST':
@@ -83,8 +87,13 @@ def menu_input():
 
         db.session.add(menu)
         db.session.commit()
-        flash("Menu gemt for denne uge.")
-        return redirect(url_for('admin.menu_input'))
+        flash("Menu gemt for denne uge.", "success")
+
+        next_url = request.form.get('next') or url_for('admin.menu_input')
+        if not is_safe_url(next_url):
+            next_url = url_for('admin.menu_input')
+        return redirect(next_url)
 
     return render_template("admin_menu.html", menu=menu, current_week=current_week)
+
 
