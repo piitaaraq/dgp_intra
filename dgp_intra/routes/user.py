@@ -1,8 +1,10 @@
 # routes/user.py
 from flask import Blueprint, render_template, redirect, url_for, request, flash, abort
 from flask_login import login_required, current_user
-from ..models import LunchRegistration, WeeklyMenu, Vacation, User, Event, EventRegistration
+from ..models import LunchRegistration, WeeklyMenu, Vacation, User, Event, EventRegistration, BreakfastRegistration
 from datetime import datetime, timedelta, time, date 
+
+BREAKFAST_LOCK = time(9, 0)
 
 from flask_mail import Message
 from ..extensions import mail, db
@@ -27,6 +29,10 @@ def dashboard():
 
     registered_dates = {
         r.date for r in LunchRegistration.query.filter_by(user_id=current_user.id).all()
+    }
+
+    registered_breakfast_dates = {
+    r.date for r in BreakfastRegistration.query.filter_by(user_id=current_user.id).all()
     }
 
     next_event = (
@@ -84,6 +90,7 @@ def dashboard():
         next_events=next_events,
         user_registrations=user_registrations,
         days_left=days_left,
+        registered_breakfast_dates=registered_breakfast_dates,
 
     )
 
@@ -190,6 +197,69 @@ def cancel_registration(date):
     flash(f"Din tilmelding til {reg_date.strftime('%A %d/%m')} er annulleret.")
     return redirect(url_for('user.dashboard'))
 
+
+@user_bp.route('/breakfast/register/<date>', methods=['POST'])
+@login_required
+def register_breakfast(date):
+    try:
+        reg_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        abort(400)
+
+    today = datetime.today().date()
+    now = datetime.now().time()
+
+    if reg_date.weekday() != 4:  # Friday only
+        flash("Morgenmad er kun om fredagen.")
+        return redirect(url_for('user.dashboard'))
+
+    if reg_date == today and now >= BREAKFAST_LOCK:
+        flash("Morgenmadstilmelding er lukket i dag (efter kl. 9).")
+        return redirect(url_for('user.dashboard'))
+
+    existing = BreakfastRegistration.query.filter_by(user_id=current_user.id, date=reg_date).first()
+    if existing:
+        flash("Allerede tilmeldt morgenmad den dag.")
+        return redirect(url_for('user.dashboard'))
+
+    db.session.add(BreakfastRegistration(date=reg_date, user_id=current_user.id))
+    db.session.commit()
+
+    flash(f"Tilmeldt morgenmad {reg_date.strftime('%A %d/%m')} kl. 10:00")
+    return redirect(url_for('user.dashboard'))
+
+
+@user_bp.route('/breakfast/cancel/<date>', methods=['POST'])
+@login_required
+def cancel_breakfast(date):
+    try:
+        reg_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        abort(400)
+
+    today = datetime.today().date()
+    now = datetime.now().time()
+
+    if reg_date == today and now >= BREAKFAST_LOCK:
+        flash("Du kan ikke afmelde morgenmad efter kl. 9.")
+        return redirect(url_for('user.dashboard'))
+
+    if reg_date < today:
+        flash("Du kan ikke afmelde tidligere dage.")
+        return redirect(url_for('user.dashboard'))
+
+    registration = BreakfastRegistration.query.filter_by(user_id=current_user.id, date=reg_date).first()
+    if not registration:
+        flash("Du er ikke tilmeldt morgenmad den dag.")
+        return redirect(url_for('user.dashboard'))
+
+    db.session.delete(registration)
+    db.session.commit()
+
+    flash(f"Din morgenmadstilmelding {reg_date.strftime('%A %d/%m')} er annulleret.")
+    return redirect(url_for('user.dashboard'))
+
+
 @user_bp.route('/buy', methods=['GET', 'POST'])
 @login_required
 def buy_credits():
@@ -220,6 +290,35 @@ def buy_credits():
 
     return render_template('buy_credits.html')
 
+@user_bp.route('/coupon', methods=['GET', 'POST'])
+@login_required
+def buy_coupon():
+    if request.method == 'POST':
+        amount = int(request.form.get('amount'))
+        if amount not in [1, 5]:
+            flash("Ugyldigt antal klip valgt.")
+            return redirect(url_for('user.buy_coupon'))
+
+        cost = amount * 22
+        user = db.session.merge(current_user)
+
+        if user.owes >= 110:
+            flash("Du skylder allerede 110 kr. Du kan ikke købe flere klip før du har betalt.")
+            return redirect(url_for('user.dashboard'))
+
+        # Optional: also prevent buying if this purchase would push them over the cap
+        if user.owes + cost > 110:
+            flash("Denne transaktion vil få din gæld til at overstige 110 kr. Køb færre klip eller betal først.")
+            return redirect(url_for('user.dashboard'))
+
+        user.credit += amount
+        user.owes += cost
+        db.session.commit()
+
+        flash(f"Du har købt {amount} klip. Du skylder nu {user.owes} DKK.")
+        return redirect(url_for('user.dashboard'))
+
+    return render_template('buy_coupon.html')
 
 @user_bp.route('/change_password', methods=['GET', 'POST'])
 @login_required

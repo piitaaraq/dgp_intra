@@ -1,0 +1,75 @@
+{% extends "base.html" %} {% block title %}Køb flere klip – DgP Intra{% endblock
+%} {% block content %}
+<!-- Hero -->
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+  <h1 class="display-6 fw-semibold mb-2">Køb klip til frokost</h1>
+  <p class="fs-5 mb-0">
+    Du har i øjeblikket <strong>{{ current_user.credit }}</strong> klip.<br />
+    Du skylder: <strong>{{ current_user.owes }} DKK</strong>
+  </p>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm rounded-3">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h2 class="h5 mb-0">Vælg antal klip</h2>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <div class="form-check mb-2">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="amount"
+                value="1"
+                id="credit1"
+                required />
+              <label class="form-check-label" for="credit1"
+                >1 klip (22 DKK)</label
+              >
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="amount"
+                value="5"
+                id="credit5" />
+              <label class="form-check-label" for="credit5"
+                >5 klip (110 DKK)</label
+              >
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-brand rounded-2">
+              Bekræft køb
+            </button>
+            <a
+              href="{{ url_for('user.dashboard') }}"
+              class="btn btn-outline-secondary rounded-2"
+              >Tilbage til dashboard</a
+            >
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <p>
+      Lorem, ipsum dolor sit amet consectetur adipisicing elit. Natus ut dolore
+      nostrum maxime? Atque, nihil reprehenderit. Similique quidem, eum corporis
+      tempora, odit sint velit quibusdam labore, consectetur expedita cupiditate
+      incidunt.
+    </p>
+    <p>
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
+      laboriosam, quod, quas, quia quibusdam quidem voluptates quibusdam
+      quibusdam quibusdam quibusdam quibusdam quibusdam quibusdam quibusdam
+      quibusdam.
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -239,6 +239,72 @@ block content %}
         </div>
       </div>
 
+      {# --- Friday breakfast card (free) --- #} {% set friday_date = dates[4]
+      %} {% set br_locked = (friday_date < current_date) or (friday_date ==
+      current_date and current_time >= time(9, 0)) %}
+
+      <div class="row g-3 mt-3">
+        <div class="col">
+          <div class="card h-100 rounded-3 border-0 shadow-sm">
+            <div
+              class="card-header bg-body-tertiary rounded-top-3 d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"
+                >Fredag morgenmad {{ friday_date.strftime('%d/%m') }} · Kl.
+                10:00</span
+              >
+              {% if br_locked %}
+              <span class="badge bg-light text-dark border">Lukket</span>
+              {% elif friday_date in registered_breakfast_dates %}
+              <span class="badge text-bg-success">Tilmeldt</span>
+              {% else %}
+              <span class="badge text-bg-brand">Åben</span>
+              {% endif %}
+            </div>
+            <div class="card-body d-flex flex-column">
+              <p class="mb-3">Morgenmad</p>
+              {# no menu input needed #}
+
+              <div class="mt-auto">
+                {% if friday_date in registered_breakfast_dates %}
+                <form
+                  action="{{ url_for('user.cancel_breakfast', date=friday_date.strftime('%Y-%m-%d')) }}"
+                  method="POST"
+                  class="mb-2">
+                  <button
+                    type="submit"
+                    class="btn btn-outline-danger w-100 rounded-2"
+                    {%
+                    if
+                    br_locked
+                    %}disabled{%
+                    endif
+                    %}>
+                    Afmeld
+                  </button>
+                </form>
+                {% else %}
+                <form
+                  action="{{ url_for('user.register_breakfast', date=friday_date.strftime('%Y-%m-%d')) }}"
+                  method="POST">
+                  <button
+                    type="submit"
+                    class="btn btn-brand w-100 rounded-2"
+                    {%
+                    if
+                    br_locked
+                    %}disabled{%
+                    endif
+                    %}>
+                    Tilmeld
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Divider -->
       <hr class="my-4" />
 

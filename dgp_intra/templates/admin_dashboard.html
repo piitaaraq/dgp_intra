@@ -13,6 +13,71 @@ endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
 
 <div class="row g-4">
   <div class="col-lg-6">
+    <!-- Weekly registrations -->
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h2 class="h5 mb-0">Registreringer til frokost denne uge</h2>
+      </div>
+
+      <div class="card-body">
+        {% if grouped_registrations %}
+        <div class="d-flex flex-column gap-3">
+          {% for date, users in grouped_registrations.items()|sort %}
+          <div class="border rounded-3">
+            <div class="d-flex justify-content-between align-items-center p-3">
+              <h3 class="h6 mb-0">
+                {{ weekdays_da[date.strftime('%A')] }}
+                <span class="text-body-secondary"
+                  >— {{ date.strftime('%d/%m') }}</span
+                >
+              </h3>
+              <span class="badge bg-light text-dark border"
+                >{{ users|length }} registreret</span
+              >
+            </div>
+            <ul class="list-group list-group-flush">
+              {% for user in users %}
+              <li class="list-group-item">{{ user.name }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Ingen har registreret endnu.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div
+        class="card-header bg-accent-1 border-accent-1 rounded-top-3 d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">Morgenmad denne fredag</h2>
+        <span class="badge bg-light text-dark border"
+          >{{ breakfast_count }} tilmeldt</span
+        >
+      </div>
+      <div class="card-body">
+        <div class="small text-body-secondary mb-3">
+          {{ weekdays_da[breakfast_date.strftime('%A')] }} — {{
+          breakfast_date.strftime('%d/%m') }} · Kl. 10:00
+        </div>
+
+        {% if breakfast_users %}
+        <ul class="list-group list-group-flush">
+          {% for user in breakfast_users %}
+          <li class="list-group-item">{{ user.name }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">Ingen tilmeldinger endnu.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
     <!-- Owed credits -->
     <div class="card border-0 shadow-sm rounded-3 h-100">
       <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
@@ -49,44 +114,6 @@ endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
         <p class="text-muted mb-0">Ingen ansatte skylder penge for klip.</p>
       </div>
       {% endif %}
-    </div>
-  </div>
-
-  <div class="col-lg-6">
-    <!-- Weekly registrations -->
-    <div class="card border-0 shadow-sm rounded-3 h-100">
-      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
-        <h2 class="h5 mb-0">Registreringer til frokost denne uge</h2>
-      </div>
-
-      <div class="card-body">
-        {% if grouped_registrations %}
-        <div class="d-flex flex-column gap-3">
-          {% for date, users in grouped_registrations.items()|sort %}
-          <div class="border rounded-3">
-            <div class="d-flex justify-content-between align-items-center p-3">
-              <h3 class="h6 mb-0">
-                {{ weekdays_da[date.strftime('%A')] }}
-                <span class="text-body-secondary"
-                  >— {{ date.strftime('%d/%m') }}</span
-                >
-              </h3>
-              <span class="badge bg-light text-dark border"
-                >{{ users|length }} registreret</span
-              >
-            </div>
-            <ul class="list-group list-group-flush">
-              {% for user in users %}
-              <li class="list-group-item">{{ user.name }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-muted mb-0">Ingen har registreret endnu.</p>
-        {% endif %}
-      </div>
     </div>
   </div>
 </div>

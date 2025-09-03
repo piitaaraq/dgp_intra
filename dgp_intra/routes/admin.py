@@ -2,7 +2,7 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from ..extensions import db
-from ..models import User, LunchRegistration, WeeklyMenu
+from ..models import User, LunchRegistration, WeeklyMenu, BreakfastRegistration
 from datetime import datetime, timedelta
 from collections import defaultdict
 from datetime import date
@@ -25,6 +25,19 @@ def admin_dashboard():
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=4)
 
+    friday_date = start_of_week + timedelta(days=4)
+
+    breakfast_regs = (
+        db.session.query(BreakfastRegistration, User)
+        .join(User, BreakfastRegistration.user_id == User.id)
+        .filter(BreakfastRegistration.date == friday_date)
+        .order_by(User.name)
+        .all()
+    )
+
+    breakfast_users = [u for (_br, u) in breakfast_regs]
+    breakfast_count = len(breakfast_users)
+
     raw_regs = (
         db.session.query(LunchRegistration, User)
         .join(User, LunchRegistration.user_id == User.id)
@@ -41,7 +54,10 @@ def admin_dashboard():
         'admin_dashboard.html',
         users_who_owe=users_who_owe,
         registrations=raw_regs,
-        grouped_registrations=grouped
+        grouped_registrations=grouped,
+        breakfast_users=breakfast_users,
+        breakfast_count=breakfast_count,
+        breakfast_date=friday_date
     )
 
 @admin_bp.route('/mark_paid/<int:user_id>', methods=['POST'])

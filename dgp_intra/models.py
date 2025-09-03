@@ -38,6 +38,11 @@ class LunchRegistration(db.Model):
     date = db.Column(db.Date)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+class BreakfastRegistration(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
 class WeeklyMenu(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     week = db.Column(db.String(10))  # e.g. "2025-W14"
