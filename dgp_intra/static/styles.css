@@ -104,7 +104,10 @@
   }
 }
 
-
+.card-header  .btn {
+  color:#FEFEFA;
+  border-color: #FEFEFA;
+}
 
 
 /* Softer section headers */
