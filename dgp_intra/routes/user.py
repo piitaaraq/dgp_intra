@@ -521,3 +521,11 @@ def event_detail(event_id):
         is_registered=is_registered
     )
 
+
+# Public routes
+
+@user_bp.route('/terms')
+def terms():
+    # Valgfrit: hold "sidst opdateret" dynamisk
+    return render_template('terms.html', last_updated=date.today().strftime("%d.%m.%Y"))
+
