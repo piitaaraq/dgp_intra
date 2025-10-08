@@ -3,6 +3,24 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_required, current_user
 from ..models import LunchRegistration, WeeklyMenu, Vacation, User, Event, EventRegistration, BreakfastRegistration
 from datetime import datetime, timedelta, time, date 
+from datetime import date as date_cls
+from sqlalchemy import and_
+
+def _safe_date(year, month, day):
+    # Handle Feb 29 in non-leap years -> celebrate on Feb 28
+    try:
+        return date_cls(year, month, day)
+    except ValueError:
+        if month == 2 and day == 29:
+            return date_cls(year, 2, 28)
+        raise
+
+def next_birthday(dob: date_cls, today: date_cls) -> date_cls:
+    this_year = _safe_date(today.year, dob.month, dob.day)
+    if this_year >= today:
+        return this_year
+    return _safe_date(today.year + 1, dob.month, dob.day)
+
 
 BREAKFAST_LOCK = time(9, 0)
 
@@ -76,6 +94,28 @@ def dashboard():
         .all()
     )
 
+    all_with_dob = User.query.filter(
+        and_(User.pub_dob == True, User.dob.isnot(None))
+    ).all()
+
+    today_d = today.date()
+    upcoming_birthdays = []
+    for u in all_with_dob:
+        nb = next_birthday(u.dob, today_d)
+        delta = (nb - today_d).days
+        if 0 <= delta <= 30:
+            age_turning = nb.year - u.dob.year
+            upcoming_birthdays.append({
+                "user": u,
+                "date": nb,
+                "in_days": delta,
+                "age": age_turning
+            })
+
+    upcoming_birthdays.sort(key=lambda x: (x["date"].month, x["date"].day))
+
+
+
     return render_template(
         "dashboard.html",
         user=current_user,
@@ -91,6 +131,7 @@ def dashboard():
         user_registrations=user_registrations,
         days_left=days_left,
         registered_breakfast_dates=registered_breakfast_dates,
+        upcoming_birthdays=upcoming_birthdays,
 
     )
 
@@ -520,6 +561,25 @@ def event_detail(event_id):
         registered_users=registered_users,
         is_registered=is_registered
     )
+
+@user_bp.route('/me/dob-consent', methods=['POST'])
+@login_required
+def update_dob_consent():
+    # pub_dob is checked => '1' present; unchecked => missing
+    wants_public = request.form.get('pub_dob') == '1'
+    current_user.pub_dob = wants_public
+
+    dob_str = request.form.get('dob')
+    if dob_str:
+        try:
+            current_user.dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash("Ugyldig fødselsdato.", "danger")
+            return redirect(url_for('user.dashboard'))
+
+    db.session.commit()
+    flash("Dine indstillinger er opdateret.", "success")
+    return redirect(url_for('user.dashboard'))
 
 
 # Public routes

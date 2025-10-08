@@ -13,6 +13,8 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     credit = db.Column(db.Integer, default=0)
     owes = db.Column(db.Integer, default=0)
+    dob = db.Column(db.Date, nullable=True, index=True)
+    pub_dob = db.Column(db.Boolean, nullable=False, default=False) 
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
