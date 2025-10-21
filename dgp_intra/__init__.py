@@ -1,7 +1,6 @@
 from flask import Flask
 from config import Config
 from .extensions import db, login_manager, mail, celery
-from .routes import auth_bp, user_bp, admin_bp
 from .models import User
 from dotenv import load_dotenv
 
@@ -29,10 +28,8 @@ def create_app():
     celery.Task = ContextTask
 
     # Register blueprints
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(user_bp)
-    app.register_blueprint(admin_bp)
-
+    from dgp_intra.routes import register_blueprints
+    register_blueprints(app)
     # Error handler
     @app.errorhandler(403)
     def forbidden(e):

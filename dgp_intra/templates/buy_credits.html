@@ -19,27 +19,12 @@
         <form method="POST">
           <div class="mb-3">
             <div class="form-check mb-2">
-              <input
-                class="form-check-input"
-                type="radio"
-                name="amount"
-                value="1"
-                id="credit1"
-                required />
-              <label class="form-check-label" for="credit1"
-                >1 klip (22 DKK)</label
-              >
+              <input class="form-check-input" type="radio" name="amount" value="1" id="credit1" required />
+              <label class="form-check-label" for="credit1">1 klip (22 DKK)</label>
             </div>
             <div class="form-check">
-              <input
-                class="form-check-input"
-                type="radio"
-                name="amount"
-                value="5"
-                id="credit5" />
-              <label class="form-check-label" for="credit5"
-                >5 klip (110 DKK)</label
-              >
+              <input class="form-check-input" type="radio" name="amount" value="5" id="credit5" />
+              <label class="form-check-label" for="credit5">5 klip (110 DKK)</label>
             </div>
           </div>
 
@@ -47,11 +32,8 @@
             <button type="submit" class="btn btn-brand rounded-2">
               Bekræft køb
             </button>
-            <a
-              href="{{ url_for('user.dashboard') }}"
-              class="btn btn-outline-secondary rounded-2"
-              >Tilbage til dashboard</a
-            >
+            <a href="{{ url_for('dashboard.view') }}" class="btn btn-outline-secondary rounded-2">Tilbage til
+              dashboard</a>
           </div>
         </form>
       </div>

@@ -42,53 +42,45 @@ block content %}
         {% endif %}
 
         <div class="mt-auto d-grid gap-2">
-          <a
-            href="{{ url_for('user.event_detail', event_id=event.id) }}"
+          <a href="{{ url_for('events.detail', event_id=event.id) }}"
             class="btn btn-outline-secondary btn-sm rounded-2">
             Se mere
           </a>
 
           {% if event.id in user_registrations %}
-          <form
-            action="{{ url_for('user.unregister_for_event', event_id=event.id) }}"
-            method="post">
+          <form action="{{ url_for('events.unregister', event_id=event.id) }}" method="post">
             <button class="btn btn-light btn-sm w-100 rounded-2" type="submit">
               Afmeld
             </button>
           </form>
-          {% elif event.deadline and event.deadline <= current_date %}
-          <div class="text-muted small">Tilmeldingsfristen er udløbet</div>
-          {% else %}
-          <form
-            action="{{ url_for('user.register_for_event', event_id=event.id) }}"
-            method="post">
-            <button class="btn btn-brand btn-sm w-100 rounded-2" type="submit">
-              Tilmeld
-            </button>
-          </form>
-          {% endif %} {% if event.organizer_id == current_user.id %}
-          <form
-            action="{{ url_for('user.delete_event', event_id=event.id) }}"
-            method="post"
-            onsubmit="return confirm('Er du sikker på, at du vil slette dette arrangement?');">
-            <button
-              class="btn btn-outline-danger btn-sm w-100 rounded-2"
-              type="submit">
-              Slet
-            </button>
-          </form>
-          {% endif %}
+          {% elif event.deadline and event.deadline <= current_date %} <div class="text-muted small">Tilmeldingsfristen
+            er udløbet
         </div>
+        {% else %}
+        <form action="{{ url_for('events.register', event_id=event.id) }}" method="post">
+          <button class="btn btn-brand btn-sm w-100 rounded-2" type="submit">
+            Tilmeld
+          </button>
+        </form>
+        {% endif %} {% if event.organizer_id == current_user.id %}
+        <form action="{{ url_for('events.delete', event_id=event.id) }}" method="post"
+          onsubmit="return confirm('Er du sikker på, at du vil slette dette arrangement?');">
+          <button class="btn btn-outline-danger btn-sm w-100 rounded-2" type="submit">
+            Slet
+          </button>
+        </form>
+        {% endif %}
       </div>
-
-      {% if event.id in user_registrations %}
-      <div class="card-footer text-bg-success text-center rounded-bottom-3">
-        Tilmeldt
-      </div>
-      {% endif %}
     </div>
+
+    {% if event.id in user_registrations %}
+    <div class="card-footer text-bg-success text-center rounded-bottom-3">
+      Tilmeldt
+    </div>
+    {% endif %}
   </div>
-  {% endfor %}
+</div>
+{% endfor %}
 </div>
 {% else %}
 <div class="alert alert-soft">Ingen arrangementer fundet.</div>
@@ -97,11 +89,7 @@ block content %}
 <hr class="mt-5" />
 
 <div class="d-flex flex-wrap gap-2">
-  <a class="btn btn-link" href="{{ url_for('user.dashboard') }}"
-    >← Tilbage til dashboard</a
-  >
-  <a class="btn btn-primary" href="{{ url_for('user.create_event') }}"
-    >Opret nyt arrangement</a
-  >
+  <a class="btn btn-link" href="{{ url_for('dashboard.view') }}">← Tilbage til dashboard</a>
+  <a class="btn btn-primary" href="{{ url_for('events.create') }}">Opret nyt arrangement</a>
 </div>
 {% endblock %}

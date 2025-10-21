@@ -14,57 +14,34 @@ block content %}
       </div>
       <div class="card-body">
         <form method="POST" class="d-flex flex-column gap-3">
-          <input
-            type="hidden"
-            name="next"
-            value="{{ url_for('admin.menu_input') }}" />
+          <input type="hidden" name="next" value="{{ url_for('admin.menu_input') }}" />
           <div>
             <label class="form-label fw-semibold" for="monday">Mandag</label>
-            <input
-              type="text"
-              id="monday"
-              name="monday"
-              class="form-control rounded-2"
+            <input type="text" id="monday" name="monday" class="form-control rounded-2"
               value="{{ menu.monday if menu else '' }}" />
           </div>
 
           <div>
             <label class="form-label fw-semibold" for="tuesday">Tirsdag</label>
-            <input
-              type="text"
-              id="tuesday"
-              name="tuesday"
-              class="form-control rounded-2"
+            <input type="text" id="tuesday" name="tuesday" class="form-control rounded-2"
               value="{{ menu.tuesday if menu else '' }}" />
           </div>
 
           <div>
             <label class="form-label fw-semibold" for="wednesday">Onsdag</label>
-            <input
-              type="text"
-              id="wednesday"
-              name="wednesday"
-              class="form-control rounded-2"
+            <input type="text" id="wednesday" name="wednesday" class="form-control rounded-2"
               value="{{ menu.wednesday if menu else '' }}" />
           </div>
 
           <div>
             <label class="form-label fw-semibold" for="thursday">Torsdag</label>
-            <input
-              type="text"
-              id="thursday"
-              name="thursday"
-              class="form-control rounded-2"
+            <input type="text" id="thursday" name="thursday" class="form-control rounded-2"
               value="{{ menu.thursday if menu else '' }}" />
           </div>
 
           <div>
             <label class="form-label fw-semibold" for="friday">Fredag</label>
-            <input
-              type="text"
-              id="friday"
-              name="friday"
-              class="form-control rounded-2"
+            <input type="text" id="friday" name="friday" class="form-control rounded-2"
               value="{{ menu.friday if menu else '' }}" />
           </div>
 
@@ -72,9 +49,7 @@ block content %}
             <button type="submit" class="btn btn-brand rounded-2">
               Gem menu
             </button>
-            <a
-              href="{{ url_for('admin.admin_dashboard') }}"
-              class="btn btn-outline-secondary rounded-2">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-2">
               Tilbage til Admin Dashboard
             </a>
           </div>

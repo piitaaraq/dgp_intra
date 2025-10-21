@@ -8,7 +8,7 @@
     arrangementer.
 </p>
 
-<form class="mb-3" method="POST" action="{{ url_for('user.create_event') }}">
+<form class="mb-3" method="POST" action="{{ url_for('events.create') }}">
     <label class="form-label" for="name">Navn:</label><br>
     <input class="form-control" type="text" name="name" id="name" required><br><br>
 
@@ -25,5 +25,5 @@
     <button class="btn btn-light" type="submit">Opret arrangement</button>
 </form>
 <hr>
-<a href="{{ url_for('user.events') }}">← Tilbage til arrangementer</a>
+<a href="{{ url_for('events.list') }}">← Tilbage til arrangementer</a>
 {% endblock %}

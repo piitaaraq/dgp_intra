@@ -27,13 +27,9 @@ endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
             <div class="d-flex justify-content-between align-items-center p-3">
               <h3 class="h6 mb-0">
                 {{ weekdays_da[date.strftime('%A')] }}
-                <span class="text-body-secondary"
-                  >— {{ date.strftime('%d/%m') }}</span
-                >
+                <span class="text-body-secondary">— {{ date.strftime('%d/%m') }}</span>
               </h3>
-              <span class="badge bg-light text-dark border"
-                >{{ users|length }} registreret</span
-              >
+              <span class="badge bg-light text-dark border">{{ users|length }} registreret</span>
             </div>
             <ul class="list-group list-group-flush">
               {% for user in users %}
@@ -55,9 +51,7 @@ endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
       <div
         class="card-header bg-accent-1 border-accent-1 rounded-top-3 d-flex justify-content-between align-items-center">
         <h2 class="h5 mb-0">Morgenmad denne fredag</h2>
-        <span class="badge bg-light text-dark border"
-          >{{ breakfast_count }} tilmeldt</span
-        >
+        <span class="badge bg-light text-dark border">{{ breakfast_count }} tilmeldt</span>
       </div>
       <div class="card-body">
         <div class="small text-body-secondary mb-3">
@@ -87,20 +81,14 @@ endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
       {% if users_who_owe %}
       <ul class="list-group list-group-flush">
         {% for user in users_who_owe %}
-        <li
-          class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div class="me-2">
             <div class="fw-semibold">{{ user.name }}</div>
             <div class="small text-body-secondary">{{ user.email }}</div>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-light text-dark border"
-              >Skylder: {{ user.owes }} DKK</span
-            >
-            <form
-              action="{{ url_for('admin.mark_paid', user_id=user.id) }}"
-              method="POST"
-              class="mb-0">
+            <span class="badge bg-light text-dark border">Skylder: {{ user.owes }} DKK</span>
+            <form action="{{ url_for('admin.mark_paid', user_id=user.id) }}" method="POST" class="mb-0">
               <button type="submit" class="btn btn-sm btn-brand rounded-2">
                 Marker som betalt
               </button>
@@ -121,13 +109,7 @@ endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
 <hr class="mt-5" />
 
 <div class="d-flex flex-wrap gap-2">
-  <a href="{{ url_for('admin.menu_input') }}" class="btn btn-primary rounded-2"
-    >Gå til Menu Input</a
-  >
-  <a
-    href="{{ url_for('user.dashboard') }}"
-    class="btn btn-outline-secondary rounded-2"
-    >Tilbage til Dashboard</a
-  >
+  <a href="{{ url_for('admin.menu_input') }}" class="btn btn-primary rounded-2">Gå til Menu Input</a>
+  <a href="{{ url_for('dashboard.view') }}" class="btn btn-outline-secondary rounded-2">Tilbage til Dashboard</a>
 </div>
 {% endblock %}

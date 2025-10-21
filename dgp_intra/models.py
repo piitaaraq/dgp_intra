@@ -3,6 +3,8 @@ from .extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
+from enum import Enum
+
 
 
 class User(db.Model):
@@ -89,4 +91,50 @@ class EventRegistration(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint('user_id', 'event_id', name='unique_event_registration'),
+    )
+
+# Implementatin of a ledger system for tracking credits and debts
+class TxType(Enum):
+    PURCHASE   = "purchase"    # top-up (+)
+    SPEND      = "spend"       # charge for meal/event (-)
+    ADJUSTMENT = "adjustment"  # manual +/- correction
+    REFUND     = "refund"      # money back (+), usually the inverse of a spend
+
+class TxStatus(Enum):
+    PENDING = "pending"  # not yet applied to balance
+    POSTED  = "posted"   # applied to balance
+    CANCELED= "canceled" # voided, never applied
+
+class CreditTransaction(db.Model):
+    __tablename__ = "credit_transaction"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer,
+                        db.ForeignKey('user.id', ondelete="CASCADE"),
+                        index=True, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True, nullable=False)
+    posted_at  = db.Column(db.DateTime, nullable=True)
+
+    # Positive adds credits, negative removes
+    delta_credits = db.Column(db.Integer, nullable=False)
+
+    tx_type  = db.Column(db.Enum(TxType), nullable=False, index=True)
+    status   = db.Column(db.Enum(TxStatus), default=TxStatus.PENDING, nullable=False, index=True)
+
+    # Optional bookkeeping if you *do* want to show kr owed/paid one day
+    amount_dkk_ore = db.Column(db.Integer, nullable=True)
+
+    # Optional linkage to “what caused it”
+    # e.g. a meal registration id, event registration id, or admin user
+    source = db.Column(db.String(64), nullable=True)      # "lunch:2025-10-20"
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    note = db.Column(db.String(280), nullable=True)
+
+    user = db.relationship("User", foreign_keys=[user_id],
+                           backref=db.backref("credit_transactions", lazy="dynamic"))
+
+    __table_args__ = (
+        db.CheckConstraint('delta_credits <> 0', name='ck_tx_nonzero_delta'),
     )

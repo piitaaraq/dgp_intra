@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Min kredit – DgP Intra{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 px-sm-2">
+
+    <!-- Header / KPIs -->
+    <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-body">
+            <!-- Row 1: header + badges -->
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <h1 class="h5 mb-0 me-auto">Min kredit</h1>
+
+                <span class="badge text-bg-brand rounded-pill">
+                    Bogført: {{ posted_balance }}
+                </span>
+
+                <span class="badge bg-light text-dark border rounded-pill">
+                    Ikke bogført:
+                    {% if pending_delta >= 0 %}+{{ pending_delta }}{% else %}{{ pending_delta }}{% endif %}
+                </span>
+            </div>
+
+            <!-- Row 2: buy buttons -->
+            <div class="d-flex flex-wrap gap-2">
+                <form method="POST" action="{{ url_for('credit.buy') }}" class="m-0">
+                    <input type="hidden" name="amount" value="1">
+                    <button type="submit" class="btn bg-light rounded-pill px-3">
+                        Køb +1 klip
+                    </button>
+                </form>
+
+                <form method="POST" action="{{ url_for('credit.buy') }}" class="m-0">
+                    <input type="hidden" name="amount" value="5">
+                    <button type="submit" class="btn bg-light rounded-pill px-3">
+                        Køb +5 klip
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-body">
+            <form class="row g-2 align-items-end" method="get" action="{{ url_for('credit.ledger') }}">
+                <div class="col-6 col-md-3">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select">
+                        <option value="">Alle</option>
+                        {% for t in ['purchase','spend','adjustment','refund'] %}
+                        <option value="{{ t }}" {% if f_type==t %}selected{% endif %}>
+                            {{
+                            {'purchase':'Top-up','spend':'Forbrug','adjustment':'Korrektion','refund':'Refundering'}[t]
+                            }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">Alle</option>
+                        {% for s in ['pending','posted','canceled'] %}
+                        <option value="{{ s }}" {% if f_status==s %}selected{% endif %}>
+                            {{ {'pending':'Ikke bogført','posted':'Bogført','canceled':'Annulleret'}[s] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">Fra</label>
+                    <input type="date" class="form-control" name="from" value="{{ f_from }}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">Til</label>
+                    <input type="date" class="form-control" name="to" value="{{ f_to }}">
+                </div>
+                <div class="col-12 col-md-2">
+                    <label class="form-label">Søg</label>
+                    <input type="text" class="form-control" name="q" value="{{ qtext }}" placeholder="note...">
+                </div>
+                <div class="col-12 d-flex gap-2 mt-1">
+                    <button class="btn btn-brand rounded-2" type="submit">Filtrér</button>
+                    <a class="btn btn-outline-secondary rounded-2" href="{{ url_for('credit.ledger') }}">Nulstil</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width: 140px;">Oprettet</th>
+                        <th>Bogført</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th class="text-end">Ændring</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in items %}
+                    <tr>
+                        <td>{{ tx.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if tx.posted_at %}
+                            {{ tx.posted_at.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set t = tx.tx_type.value %}
+                            <span
+                                class="badge {% if t=='purchase' or t=='refund' %}text-bg-success{% elif t=='spend' %}text-bg-danger{% else %}text-bg-secondary{% endif %}">
+                                {{
+                                {'purchase':'Top-up','spend':'Forbrug','adjustment':'Korrektion','refund':'Refundering'}[t]
+                                }}
+                            </span>
+                        </td>
+                        <td>
+                            {% set s = tx.status.value %}
+                            <span
+                                class="badge {% if s=='posted' %}text-bg-success{% elif s=='pending' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">
+                                {{ {'pending':'Ikke bogført','posted':'Bogført','canceled':'Annulleret'}[s] }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            {% if tx.delta_credits >= 0 %}+{{ tx.delta_credits }}{% else %}{{ tx.delta_credits }}{%
+                            endif %}
+                        </td>
+                        <td class="text-muted">{{ tx.note or '—' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-muted">Ingen transaktioner fundet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <div class="small text-muted">
+                Side {{ pagination.page }} af {{ pagination.pages }} ·
+                {{ pagination.total }} transaktioner
+            </div>
+            <nav>
+                <ul class="pagination mb-0">
+                    {% set args = request.args.to_dict() %}
+                    {% set prev_args = args.copy() %}{% set _=prev_args.update({'page': pagination.prev_num}) %}
+                    {% set next_args = args.copy() %}{% set _=next_args.update({'page': pagination.next_num}) %}
+
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link"
+                            href="{% if pagination.has_prev %}{{ url_for('credit.ledger', **prev_args) }}{% else %}#{% endif %}">Forrige</a>
+                    </li>
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link"
+                            href="{% if pagination.has_next %}{{ url_for('credit.ledger', **next_args) }}{% else %}#{% endif %}">Næste</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

@@ -23,12 +23,12 @@
 
           <!-- Buttons row (bottom on mobile, right on desktop) -->
           <div class="d-flex gap-2 ms-lg-auto mt-2 mt-lg-0">
-            <a href="{{ url_for('user.events') }}" class="btn btn-primary rounded-pill">Se alle events</a>
+            <a href="{{ url_for('events.list') }}" class="btn btn-primary rounded-pill">Se alle events</a>
             <a href="#vacation" class="btn btn-brand rounded-pill">Registrer fravær</a>
+            <a href="{{ url_for('credit.ledger') }}" class="btn btn-outline-dark rounded-pill">Se kreditoversigt</a>
           </div>
         </div>
-        <form method="POST" action="{{ url_for('user.update_dob_consent') }}"
-          class="d-flex align-items-center gap-3 mt-2">
+        <form method="POST" action="{{ url_for('profile.dob_consent') }}" class="d-flex align-items-center gap-3 mt-2">
           <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="pub_dob" name="pub_dob" value="1" {% if
               current_user.pub_dob %}checked{% endif %} onchange="this.form.submit()">
@@ -60,7 +60,7 @@
         </div>
         <div class="card-body">
           <form method="POST" action="{{ url_for('admin.menu_input') }}" class="row g-3">
-            <input type="hidden" name="next" value="{{ url_for('user.dashboard') }}" />
+            <input type="hidden" name="next" value="{{ url_for('dashboard.view') }}" />
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="monday">Mandag</label>
               <input type="text" id="monday" name="monday" class="form-control rounded-2"
@@ -138,18 +138,17 @@
 
                       <div class="mt-auto">
                         {% if date in registered_dates %}
-                        <form action="{{ url_for('user.cancel_registration', date=date.strftime('%Y-%m-%d')) }}"
-                          method="POST" class="mb-2">
+                        <form action="{{ url_for('lunch.cancel', date=date.strftime('%Y-%m-%d')) }}" method="POST"
+                          class="mb-2">
                           <button type="submit" class="btn btn-outline-danger w-100 rounded-2" {% if locked %}disabled{%
                             endif %}>Afmeld</button>
                         </form>
-                        <form action="{{ url_for('user.add_plus_one', date=date.strftime('%Y-%m-%d')) }}" method="POST">
+                        <form action="{{ url_for('lunch.plus_one', date=date.strftime('%Y-%m-%d')) }}" method="POST">
                           <button type="submit" class="btn btn-outline-secondary w-100 rounded-2" {% if
                             (current_user.credit < 1 and needs_credit) or locked %}disabled{% endif %}>+1</button>
                         </form>
                         {% else %}
-                        <form action="{{ url_for('user.register_lunch', date=date.strftime('%Y-%m-%d')) }}"
-                          method="POST">
+                        <form action="{{ url_for('lunch.register', date=date.strftime('%Y-%m-%d')) }}" method="POST">
                           <button type="submit" class="btn btn-brand w-100 rounded-2" {% if (current_user.credit < 1 and
                             needs_credit) or locked %}disabled{% endif %}>Tilmeld</button>
                         </form>
@@ -185,13 +184,13 @@
 
                 <div class="mt-auto">
                   {% if friday_date in registered_breakfast_dates %}
-                  <form action="{{ url_for('user.cancel_breakfast', date=friday_date.strftime('%Y-%m-%d')) }}"
-                    method="POST" class="mb-2">
+                  <form action="{{ url_for('breakfast.cancel', date=friday_date.strftime('%Y-%m-%d')) }}" method="POST"
+                    class="mb-2">
                     <button type="submit" class="btn btn-outline-danger w-100 rounded-2" {% if br_locked %}disabled{%
                       endif %}>Afmeld</button>
                   </form>
                   {% else %}
-                  <form action="{{ url_for('user.register_breakfast', date=friday_date.strftime('%Y-%m-%d')) }}"
+                  <form action="{{ url_for('breakfast.register', date=friday_date.strftime('%Y-%m-%d')) }}"
                     method="POST">
                     <button type="submit" class="btn btn-brand w-100 rounded-2" {% if br_locked %}disabled{% endif
                       %}>Tilmeld</button>
@@ -214,7 +213,7 @@
           <div class="card-body">
             <p class="text-body-secondary">Dette informerer kolleger om, at du ikke er til stede. Det er ikke en
               officiel ferieanmodning.</p>
-            <form method="POST" action="{{ url_for('user.add_vacation') }}" class="row g-3 align-items-end">
+            <form method="POST" action="{{ url_for('vacations.add') }}" class="row g-3 align-items-end">
               <div class="col-md-5">
                 <label for="start_date" class="form-label">Startdato</label>
                 <input type="date" class="form-control rounded-2" name="start_date" required />
@@ -238,7 +237,7 @@
                 {% for vac in user_vacations %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   <span>{{ vac.start_date.strftime('%d/%m') }} – {{ vac.end_date.strftime('%d/%m') }}</span>
-                  <form method="POST" action="{{ url_for('user.delete_vacation', vacation_id=vac.id) }}" class="mb-0">
+                  <form method="POST" action="{{ url_for('vacations.delete', vacation_id=vac.id) }}" class="mb-0">
                     <button onclick="return confirm('Er du sikker på, at du vil slette denne periode?')" type="submit"
                       class="btn btn-sm btn-outline-danger rounded-pill">Slet</button>
                   </form>
@@ -276,7 +275,7 @@
           <div
             class="card-header bg-accent-1 border-accent-1 rounded-top-3 d-flex align-items-center justify-content-between">
             <h2 class="h5 mb-0">Events</h2>
-            <a class="btn btn-sm btn-outline-secondary rounded-pill" href="{{ url_for('user.events') }}">Se alle</a>
+            <a class="btn btn-sm btn-outline-secondary rounded-pill" href="{{ url_for('events.list') }}">Se alle</a>
           </div>
           <div class="card-body">
             <p class="text-body-secondary mb-3">De næste arrangementer:</p>
@@ -293,19 +292,19 @@
                 {% endif %}
 
                 <div class="mt-2 d-grid gap-2">
-                  <a href="{{ url_for('user.event_detail', event_id=event.id) }}"
+                  <a href="{{ url_for('events.detail', event_id=event.id) }}"
                     class="btn btn-outline-secondary btn-sm rounded-2"> Se mere </a>
 
                   {% if event.id in user_registrations %}
                   <div class="badge text-bg-success w-100 py-2 rounded-2 text-center">Tilmeldt</div>
-                  <form action="{{ url_for('user.unregister_for_event', event_id=event.id) }}" method="post">
+                  <form action="{{ url_for('events.unregister', event_id=event.id) }}" method="post">
                     <button class="btn btn-light btn-sm w-100 rounded-2" type="submit">Afmeld</button>
                   </form>
                   {% elif event.deadline and event.deadline <= current_date %} <div class="text-muted small">
                     Tilmeldingsfristen er udløbet
                 </div>
                 {% else %}
-                <form action="{{ url_for('user.register_for_event', event_id=event.id) }}" method="post">
+                <form action="{{ url_for('events.register', event_id=event.id) }}" method="post">
                   <button class="btn btn-brand btn-sm w-100 rounded-2" type="submit">Tilmeld</button>
                 </form>
                 {% endif %}
@@ -353,7 +352,7 @@
 
       <div class="alert alert-soft mt-3">
         Der kan være flere arrangementer end vist ovenfor – tjek
-        <a href="{{ url_for('user.events') }}">arrangementssiden</a>.
+        <a href="{{ url_for('events.list') }}">arrangementssiden</a>.
       </div>
     </div>
   </div>
