@@ -17,25 +17,29 @@ def make_celery(app):
     )
     celery.conf.update(app.config)
     celery.conf.task_default_queue = 'dgp_intra'
-
+    
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
             with app.app_context():
                 return self.run(*args, **kwargs)
-
+    
     celery.Task = ContextTask
     return celery
 
 print("BROKER:", flask_app.config.get("broker_url"))
-
 celery = make_celery(flask_app)
 
-# Import the function *after* celery is defined to avoid circular imports
+# Import the functions *after* celery is defined to avoid circular imports
 from dgp_intra.tasks.email_tasks import send_daily_kitchen_email as send_email_logic
+from dgp_intra.tasks.payment_reminder_worker import send_weekly_payment_reminders as send_reminder_logic
 
 @celery.task(name='dgp_intra.tasks.email_tasks.send_daily_kitchen_email')
 def send_daily_kitchen_email():
     return send_email_logic()
+
+@celery.task(name='dgp_intra.tasks.payment_reminder_worker.send_weekly_payment_reminders')
+def send_weekly_payment_reminders():
+    return send_reminder_logic()
 
 celery.conf.timezone = "Europe/Copenhagen"
 celery.conf.enable_utc = False
@@ -44,5 +48,9 @@ celery.conf.beat_schedule = {
     'send-kitchen-email-9am': {
         'task': 'dgp_intra.tasks.email_tasks.send_daily_kitchen_email',
         'schedule': crontab(hour=9, minute=0, day_of_week='mon-fri'),
+    },
+    'send-payment-reminders-monday-8am': {
+        'task': 'dgp_intra.tasks.payment_reminder_worker.send_weekly_payment_reminders',
+        'schedule': crontab(hour=8, minute=0, day_of_week='mon'),
     },
 }
