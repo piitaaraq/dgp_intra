@@ -13,21 +13,33 @@
         }}</p>
         {% endif %}
 
-        <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2">
-          <!-- Badges row (top on mobile, left on desktop) -->
-          <div class="d-flex flex-wrap gap-2">
-            <span class="badge text-bg-brand rounded-pill"> Dine klip: {{ current_user.credit }} </span>
-            <span class="badge bg-light text-dark border rounded-pill"> Uge {{ dates[0].isocalendar()[1] }} </span>
+        <div class="d-flex flex-column flex-lg-row align-items-lg-start gap-2">
 
+          <!-- LEFT SIDE: badges + kreditoversigt (always vertical) -->
+          <div class="d-flex flex-column gap-2">
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge text-bg-brand rounded-pill">Dine klip: {{ current_user.credit }}</span>
+              <span class="badge bg-light text-dark border rounded-pill">Uge {{ dates[0].isocalendar()[1] }}</span>
+            </div>
+
+            <a href="{{ url_for('credit.ledger') }}" class="btn btn-outline-dark btn-sm rounded-pill">
+              Se kreditoversigt
+            </a>
           </div>
 
-          <!-- Buttons row (bottom on mobile, right on desktop) -->
-          <div class="d-flex gap-2 ms-lg-auto mt-2 mt-lg-0">
-            <a href="{{ url_for('events.list') }}" class="btn btn-primary rounded-pill">Se alle events</a>
-            <a href="#vacation" class="btn btn-brand rounded-pill">Registrer fravær</a>
-            <a href="{{ url_for('credit.ledger') }}" class="btn btn-outline-dark rounded-pill">Se kreditoversigt</a>
+          <!-- RIGHT SIDE: button row -->
+          <div class="d-flex flex-wrap gap-2 ms-lg-auto mt-2 mt-lg-0">
+            <a href="{{ url_for('events.list') }}" class="btn btn-primary btn-sm rounded-pill">Se alle events</a>
+            <a href="#vacation" class="btn btn-brand btn-sm rounded-pill">Registrer fravær</a>
+
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('admin.menu_input') }}" class="btn btn-brand btn-sm rounded-pill">Gå til Menu Input</a>
+            {% endif %}
           </div>
+
         </div>
+
+
         <form method="POST" action="{{ url_for('profile.dob_consent') }}" class="d-flex align-items-center gap-3 mt-2">
           <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="pub_dob" name="pub_dob" value="1" {% if
@@ -49,53 +61,6 @@
   <div class="row g-4">
     <!-- Main column -->
     <div class="col-lg-8">
-      <!-- Admin section-->
-      {% if current_user.is_admin %}
-      <!-- Admin-only: Quick menu edit -->
-      <div class="card border-0 shadow-sm rounded-3 mb-4">
-        <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <h2 class="h5 mb-0">Rediger ugemenu</h2>
-          </div>
-        </div>
-        <div class="card-body">
-          <form method="POST" action="{{ url_for('admin.menu_input') }}" class="row g-3">
-            <input type="hidden" name="next" value="{{ url_for('dashboard.view') }}" />
-            <div class="col-md-6">
-              <label class="form-label fw-semibold" for="monday">Mandag</label>
-              <input type="text" id="monday" name="monday" class="form-control rounded-2"
-                value="{{ weekly_menu.monday if weekly_menu else '' }}" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold" for="tuesday">Tirsdag</label>
-              <input type="text" id="tuesday" name="tuesday" class="form-control rounded-2"
-                value="{{ weekly_menu.tuesday if weekly_menu else '' }}" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold" for="wednesday">Onsdag</label>
-              <input type="text" id="wednesday" name="wednesday" class="form-control rounded-2"
-                value="{{ weekly_menu.wednesday if weekly_menu else '' }}" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold" for="thursday">Torsdag</label>
-              <input type="text" id="thursday" name="thursday" class="form-control rounded-2"
-                value="{{ weekly_menu.thursday if weekly_menu else '' }}" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold" for="friday">Fredag</label>
-              <input type="text" id="friday" name="friday" class="form-control rounded-2"
-                value="{{ weekly_menu.friday if weekly_menu else '' }}" />
-            </div>
-
-            <div class="col-12 d-flex flex-wrap gap-2 mt-2">
-              <button type="submit" class="btn btn-brand rounded-2">Gem menu</button>
-              <a href="{{ url_for('admin.menu_input') }}" class="btn btn-outline-secondary rounded-2"> Åbn fuld editor
-              </a>
-            </div>
-          </form>
-        </div>
-      </div>
-      {% endif %}
 
       <!-- Lunch section -->
       <div class="card border-0 shadow-sm rounded-3">

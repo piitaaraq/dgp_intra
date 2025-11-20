@@ -37,11 +37,12 @@ from dgp_intra.tasks.email_tasks import send_daily_kitchen_email as send_email_l
 def send_daily_kitchen_email():
     return send_email_logic()
 
+celery.conf.timezone = "Europe/Copenhagen"
+celery.conf.enable_utc = False
+
 celery.conf.beat_schedule = {
     'send-kitchen-email-9am': {
         'task': 'dgp_intra.tasks.email_tasks.send_daily_kitchen_email',
-        'schedule': crontab(hour=7, minute=0, day_of_week='mon-fri'), # 7am utc and 9am cest
-#        'schedule': crontab(minute='*/5'),  # every 5 minutes
-
+        'schedule': crontab(hour=9, minute=0, day_of_week='mon-fri'),
     },
 }

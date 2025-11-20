@@ -5,10 +5,11 @@ endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
 
 <!-- Hero -->
 <div class="p-4 p-md-5 mb-4 hero bg-accent-2">
-  <h1 class="display-6 fw-semibold mb-2">Admin Dashboard</h1>
-  <p class="mb-0">
+  <h1 class="display-6 fw-semibold mb-2">Admin & Køkken Dashboard</h1>
+  <p class="mb-3">
     Overblik over ubetalte klip og ugens frokostregistreringer.
   </p>
+  <a href="{{ url_for('admin.menu_input') }}" class="btn btn-primary rounded-2">Gå til Menu Input</a>
 </div>
 
 <div class="row g-4">
@@ -109,7 +110,6 @@ endblock %} {% block content %} {% set weekdays_da = { 'Monday': 'Mandag',
 <hr class="mt-5" />
 
 <div class="d-flex flex-wrap gap-2">
-  <a href="{{ url_for('admin.menu_input') }}" class="btn btn-primary rounded-2">Gå til Menu Input</a>
   <a href="{{ url_for('dashboard.view') }}" class="btn btn-outline-secondary rounded-2">Tilbage til Dashboard</a>
 </div>
 {% endblock %}

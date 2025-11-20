@@ -19,53 +19,52 @@
 </head>
 
 <body>
-  <!-- Navbar: brand background, subtle bottom border, fully responsive -->
-  <nav class="navbar navbar-expand-lg bg-brand border-bottom border-accent-1 mb-4">
+
+  <nav class="navbar bg-brand navbar-light border-bottom border-accent-1 mb-4">
     <div class="container-fluid">
       <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('dashboard.view') }}">
         <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="DgP Intra" />
-
         DgP Intra
       </a>
 
-      <!-- Mobile toggler -->
+      <!-- Toggler: always shown -->
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
         aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-        Menu
+        <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse justify-content-end" id="mainNav">
         {% if current_user.is_authenticated %}
-        <ul class="navbar-nav mb-2 mb-lg-0 align-items-lg-center">
-          <li class="nav-item dropdown">
-            <button class="btn btn-outline-dark btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              Konto
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <a class="dropdown-item" href="{{ url_for('credit.buy') }}">Køb flere klip</a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="{{ url_for('profile.change_password') }}">Skift adgangskode</a>
-              </li>
-              {% if current_user.is_admin %}
-              <li>
-                <a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>
-              </li>
-              {% endif %}
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-              <li>
-                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Log ud</a>
-              </li>
-            </ul>
+        <ul class="navbar-nav text-end mb-2 mb-lg-0">
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('credit.ledger') }}">Kreditoversigt</a>
           </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('profile.change_password') }}">Skift adgangskode</a>
+          </li>
+
+          {% if current_user.is_admin %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
+          </li>
+          {% endif %}
+
+          <li>
+            <hr class="dropdown-divider my-1">
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">Log ud</a>
+          </li>
+
         </ul>
         {% endif %}
       </div>
     </div>
   </nav>
+
 
   <main class="container">
     {% with messages = get_flashed_messages() %} {% if messages %}
