@@ -1,15 +1,16 @@
 from flask import Flask
 from config import Config
-from .extensions import db, login_manager, mail, migrate, init_celery
+from .extensions import db, login_manager, mail, celery, migrate
 from .models import User
 from dotenv import load_dotenv
+import sys
 
 def create_app():
     load_dotenv()
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.config['CELERY_BROKER_URL'] = app.config.get('broker_url')
-    app.config['CELERY_RESULT_BACKEND'] = app.config.get('result_backend')
+    app.config['broker_url'] = app.config.get('CELERY_BROKER_URL')
+    app.config['result_backend'] = app.config.get('CELERY_RESULT_BACKEND')
     
     # Initialize extensions
     db.init_app(app)
@@ -18,10 +19,17 @@ def create_app():
     login_manager.login_view = 'auth.login'
     mail.init_app(app)
     
-    # Initialize Celery only when not running Flask CLI
-    import sys
+    # Only set up Celery context wrapper if not running Flask CLI
     if not sys.argv[0].endswith('flask'):
-        init_celery(app)
+        celery.conf.update(app.config)
+        
+        # Wrap Celery tasks with app context
+        class ContextTask(celery.Task):
+            def __call__(self, *args, **kwargs):
+                with app.app_context():
+                    return self.run(*args, **kwargs)
+        
+        celery.Task = ContextTask
     
     # Register blueprints
     from dgp_intra.routes import register_blueprints

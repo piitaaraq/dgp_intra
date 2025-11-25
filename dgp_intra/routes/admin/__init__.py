@@ -2,7 +2,7 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from dgp_intra.extensions import db
-from dgp_intra.models import User, LunchRegistration, WeeklyMenu, BreakfastRegistration
+from dgp_intra.models import User, LunchRegistration, WeeklyMenu, BreakfastRegistration, PatientsMenu
 from dgp_intra.models import CreditTransaction, TxType, TxStatus
 from datetime import date, timedelta, datetime
 from collections import defaultdict
@@ -93,29 +93,60 @@ def mark_paid(user_id):
     db.session.commit()
     flash(f"{user.name} er markeret som betalt. ({len(pending_purchases)} køb bogført)")
     return redirect(url_for('admin.dashboard'))
-
 @bp.route("/menu", methods=["GET", "POST"])
 @login_required
 def menu_input():
     if not current_user.is_admin:
         abort(403)
+    
     current_week = date.today().strftime("%Y-W%V")
-    menu = WeeklyMenu.query.filter_by(week=current_week).first()
-
+    
+    # Fetch both menus
+    weekly_menu = WeeklyMenu.query.filter_by(week=current_week).first()
+    patients_menu = PatientsMenu.query.filter_by(week=current_week).first()
+    
     if request.method == 'POST':
-        if not menu:
-            menu = WeeklyMenu(week=current_week)
-        menu.monday = request.form.get('monday')
-        menu.tuesday = request.form.get('tuesday')
-        menu.wednesday = request.form.get('wednesday')
-        menu.thursday = request.form.get('thursday')
-        menu.friday = request.form.get('friday')
-        db.session.add(menu)
+        menu_type = request.form.get('menu_type')
+        
+        if menu_type == 'weekly':
+            if not weekly_menu:
+                weekly_menu = WeeklyMenu(week=current_week)
+            weekly_menu.monday = request.form.get('monday')
+            weekly_menu.tuesday = request.form.get('tuesday')
+            weekly_menu.wednesday = request.form.get('wednesday')
+            weekly_menu.thursday = request.form.get('thursday')
+            weekly_menu.friday = request.form.get('friday')
+            db.session.add(weekly_menu)
+            flash("Personale menu gemt for denne uge.", "success")
+        
+        elif menu_type == 'patients':
+            if not patients_menu:
+                patients_menu = PatientsMenu(week=current_week)
+            # Lunch
+            patients_menu.monday = request.form.get('patients_monday')
+            patients_menu.tuesday = request.form.get('patients_tuesday')
+            patients_menu.wednesday = request.form.get('patients_wednesday')
+            patients_menu.thursday = request.form.get('patients_thursday')
+            patients_menu.friday = request.form.get('patients_friday')
+            # Dinner - THIS IS WHAT YOU NEED TO ADD
+            patients_menu.monday_dinner = request.form.get('patients_monday_dinner')
+            patients_menu.tuesday_dinner = request.form.get('patients_tuesday_dinner')
+            patients_menu.wednesday_dinner = request.form.get('patients_wednesday_dinner')
+            patients_menu.thursday_dinner = request.form.get('patients_thursday_dinner')
+            patients_menu.friday_dinner = request.form.get('patients_friday_dinner')
+            db.session.add(patients_menu)
+            flash("Patient menu gemt for denne uge.", "success")
+        
         db.session.commit()
-        flash("Menu gemt for denne uge.", "success")
+        
         next_url = request.form.get('next') or url_for('admin.menu_input')
         if not _is_safe_url(next_url):
             next_url = url_for('admin.menu_input')
         return redirect(next_url)
-
-    return render_template("admin_menu.html", menu=menu, current_week=current_week)
+    
+    return render_template(
+        "admin_menu.html", 
+        weekly_menu=weekly_menu,
+        patients_menu=patients_menu,
+        current_week=current_week
+    )

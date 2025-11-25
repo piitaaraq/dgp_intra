@@ -1,86 +1,186 @@
-{% extends "base.html" %} {% block title %}Ugemenu – DgP Intra{% endblock %} {%
-block content %}
+{% extends "base.html" %}
+{% block title %}Ugemenu – DgP Intra{% endblock %}
+{% block content %}
+
 <!-- Hero -->
 <div class="p-4 p-md-5 mb-4 hero bg-accent-2">
   <h1 class="display-6 fw-semibold mb-2">🍽️ Ugemenu for uge {{ current_week }}</h1>
-  <p class="mb-0">Opdater køkkenets frokostmenu for denne uge.</p>
+  <p class="mb-0">Opdater køkkenets frokostmenu for personale og patienter.</p>
 </div>
-<div class="row justify-content-center">
-  <div class="col-lg-8">
-    <div class="card border-0 shadow-sm rounded-3">
+
+<div class="row g-4">
+  <!-- Staff Menu -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
       <div class="card-header bg-accent-1 border-accent-1 rounded-top-3 py-3">
-        <h2 class="h5 mb-0">📝 Rediger menu</h2>
+        <h2 class="h5 mb-0">📝 Personale Menu</h2>
       </div>
       <div class="card-body p-4">
         <div class="alert alert-info border-0 rounded-3 mb-4">
-          <small>💡 <strong>Tip:</strong> Skriv menuen som den skal vises for personalet. Hold det kort og
-            appetitligt!</small>
+          <small>💡 Menu for ansatte</small>
         </div>
 
-        <form method="POST" class="d-flex flex-column gap-4">
+        <form method="POST" class="d-flex flex-column gap-3">
+          <input type="hidden" name="menu_type" value="weekly" />
           <input type="hidden" name="next" value="{{ url_for('admin.menu_input') }}" />
 
           <div>
             <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" for="monday">
               <span class="badge bg-primary rounded-circle"
-                style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">1</span>
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
               Mandag
             </label>
             <textarea id="monday" name="monday" class="form-control rounded-2" rows="2"
-              placeholder="f.eks. Hjemmelavet lasagne med salat">{{ menu.monday if menu else '' }}</textarea>
+              placeholder="f.eks. Hjemmelavet lasagne med salat">{{ weekly_menu.monday if weekly_menu else '' }}</textarea>
           </div>
 
           <div>
             <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" for="tuesday">
               <span class="badge bg-primary rounded-circle"
-                style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">2</span>
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">2</span>
               Tirsdag
             </label>
             <textarea id="tuesday" name="tuesday" class="form-control rounded-2" rows="2"
-              placeholder="f.eks. Grillet kylling med ris og grønsager">{{ menu.tuesday if menu else '' }}</textarea>
+              placeholder="f.eks. Grillet kylling med ris">{{ weekly_menu.tuesday if weekly_menu else '' }}</textarea>
           </div>
 
           <div>
             <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" for="wednesday">
               <span class="badge bg-primary rounded-circle"
-                style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">3</span>
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">3</span>
               Onsdag
             </label>
             <textarea id="wednesday" name="wednesday" class="form-control rounded-2" rows="2"
-              placeholder="f.eks. Fiskefilet med kartofler og remoulade">{{ menu.wednesday if menu else '' }}</textarea>
+              placeholder="f.eks. Fiskefilet med kartofler">{{ weekly_menu.wednesday if weekly_menu else '' }}</textarea>
           </div>
 
           <div>
             <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" for="thursday">
               <span class="badge bg-primary rounded-circle"
-                style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">4</span>
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">4</span>
               Torsdag
             </label>
             <textarea id="thursday" name="thursday" class="form-control rounded-2" rows="2"
-              placeholder="f.eks. Frikadeller med brun sovs og kartofler">{{ menu.thursday if menu else '' }}</textarea>
+              placeholder="f.eks. Frikadeller med sovs">{{ weekly_menu.thursday if weekly_menu else '' }}</textarea>
           </div>
 
           <div>
             <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2" for="friday">
               <span class="badge bg-primary rounded-circle"
-                style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">5</span>
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">5</span>
               Fredag
             </label>
             <textarea id="friday" name="friday" class="form-control rounded-2" rows="2"
-              placeholder="f.eks. Suppe med brød">{{ menu.friday if menu else '' }}</textarea>
+              placeholder="f.eks. Suppe med brød">{{ weekly_menu.friday if weekly_menu else '' }}</textarea>
           </div>
 
-          <div class="d-flex flex-wrap gap-2 mt-2 pt-3 border-top">
+          <div class="d-flex gap-2 mt-2 pt-3 border-top">
             <button type="submit" class="btn btn-brand rounded-2 px-4">
-              💾 Gem menu
+              💾 Gem personale menu
             </button>
-            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-2">
-              ← Tilbage til Admin Dashboard
-            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Patients Menu -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3 py-3">
+        <h2 class="h5 mb-0">🏥 Patient Menu</h2>
+      </div>
+      <div class="card-body p-4">
+        <div class="alert alert-info border-0 rounded-3 mb-4">
+          <small>💡 Menu for patienter (frokost og aftensmad)</small>
+        </div>
+
+        <form method="POST" class="d-flex flex-column gap-3">
+          <input type="hidden" name="menu_type" value="patients" />
+          <input type="hidden" name="next" value="{{ url_for('admin.menu_input') }}" />
+
+          <!-- Monday -->
+          <div>
+            <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-success rounded-circle"
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
+              Mandag
+            </label>
+            <textarea name="patients_monday" class="form-control rounded-2 mb-2" rows="2"
+              placeholder="Frokost">{{ patients_menu.monday if patients_menu else '' }}</textarea>
+            <textarea name="patients_monday_dinner" class="form-control rounded-2" rows="2"
+              placeholder="Aftensmad">{{ patients_menu.monday_dinner if patients_menu else '' }}</textarea>
+          </div>
+
+          <!-- Tuesday -->
+          <div>
+            <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-success rounded-circle"
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">2</span>
+              Tirsdag
+            </label>
+            <textarea name="patients_tuesday" class="form-control rounded-2 mb-2" rows="2"
+              placeholder="Frokost">{{ patients_menu.tuesday if patients_menu else '' }}</textarea>
+            <textarea name="patients_tuesday_dinner" class="form-control rounded-2" rows="2"
+              placeholder="Aftensmad">{{ patients_menu.tuesday_dinner if patients_menu else '' }}</textarea>
+          </div>
+
+          <!-- Wednesday -->
+          <div>
+            <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-success rounded-circle"
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">3</span>
+              Onsdag
+            </label>
+            <textarea name="patients_wednesday" class="form-control rounded-2 mb-2" rows="2"
+              placeholder="Frokost">{{ patients_menu.wednesday if patients_menu else '' }}</textarea>
+            <textarea name="patients_wednesday_dinner" class="form-control rounded-2" rows="2"
+              placeholder="Aftensmad">{{ patients_menu.wednesday_dinner if patients_menu else '' }}</textarea>
+          </div>
+
+          <!-- Thursday -->
+          <div>
+            <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-success rounded-circle"
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">4</span>
+              Torsdag
+            </label>
+            <textarea name="patients_thursday" class="form-control rounded-2 mb-2" rows="2"
+              placeholder="Frokost">{{ patients_menu.thursday if patients_menu else '' }}</textarea>
+            <textarea name="patients_thursday_dinner" class="form-control rounded-2" rows="2"
+              placeholder="Aftensmad">{{ patients_menu.thursday_dinner if patients_menu else '' }}</textarea>
+          </div>
+
+          <!-- Friday -->
+          <div>
+            <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-success rounded-circle"
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">5</span>
+              Fredag
+            </label>
+            <textarea name="patients_friday" class="form-control rounded-2 mb-2" rows="2"
+              placeholder="Frokost">{{ patients_menu.friday if patients_menu else '' }}</textarea>
+            <textarea name="patients_friday_dinner" class="form-control rounded-2" rows="2"
+              placeholder="Aftensmad">{{ patients_menu.friday_dinner if patients_menu else '' }}</textarea>
+          </div>
+
+          <div class="d-flex gap-2 mt-2 pt-3 border-top">
+            <button type="submit" class="btn btn-brand rounded-2 px-4">
+              💾 Gem patient menu
+            </button>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+<div class="row mt-3">
+  <div class="col">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-2">
+      ← Tilbage til Admin Dashboard
+    </a>
+  </div>
+</div>
+
 {% endblock %}
