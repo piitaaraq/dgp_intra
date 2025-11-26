@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Behandler betaling - DgP Intra{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 px-sm-2">
+    <div class="row g-4 justify-content-center min-vh-75 align-items-center">
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body text-center py-5">
+
+                    <!-- Spinner -->
+                    <div class="mb-4">
+                        <div class="spinner-border text-brand" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Behandler...</span>
+                        </div>
+                    </div>
+
+                    <!-- Status message -->
+                    <h2 class="h4 mb-3" id="status-message">Behandler din betaling...</h2>
+                    <p class="text-body-secondary mb-4" id="status-detail">
+                        Vent venligst mens vi verificerer din betaling. Dette tager normalt kun få sekunder.
+                    </p>
+
+                    <!-- Progress indicator -->
+                    <div class="d-flex justify-content-center gap-2 mb-4" id="progress-dots">
+                        <div class="dot"
+                            style="width: 8px; height: 8px; border-radius: 50%; background: var(--bs-brand);"></div>
+                        <div class="dot"
+                            style="width: 8px; height: 8px; border-radius: 50%; background: var(--bs-brand);"></div>
+                        <div class="dot"
+                            style="width: 8px; height: 8px; border-radius: 50%; background: var(--bs-brand);"></div>
+                    </div>
+
+                    <!-- Information -->
+                    <div class="alert alert-soft">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Luk ikke dette vindue før betalingen er gennemført
+                        </small>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Fallback link (appears after 30 seconds) -->
+            <div class="text-center mt-4" id="fallback-link" style="display: none;">
+                <p class="text-muted mb-2">Tager det lang tid?</p>
+                <a href="{{ url_for('dashboard.view') }}" class="btn btn-outline-secondary rounded-pill">
+                    Gå til dashboard
+                </a>
+                <p class="small text-muted mt-2">
+                    Dine klip vil stadig blive tilføjet når betalingen er gennemført
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.3;
+        }
+    }
+
+    .dot:nth-child(1) {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .dot:nth-child(2) {
+        animation: pulse 1.5s ease-in-out 0.2s infinite;
+    }
+
+    .dot:nth-child(3) {
+        animation: pulse 1.5s ease-in-out 0.4s infinite;
+    }
+
+    .min-vh-75 {
+        min-height: 75vh;
+    }
+</style>
+
+<script>
+    // Get payment reference from URL or session storage
+    // In production, you'll pass the reference via URL parameter or store it
+    const urlParams = new URLSearchParams(window.location.search);
+    const reference = urlParams.get('ref') || sessionStorage.getItem('payment_ref');
+
+    if (!reference) {
+        // No reference found - redirect to cart
+        window.location.href = "{{ url_for('klippekort.cart') }}";
+    }
+
+    let attempts = 0;
+    const maxAttempts = 60; // Poll for 60 seconds
+
+    function updateStatus(message, detail) {
+        document.getElementById('status-message').textContent = message;
+        if (detail) {
+            document.getElementById('status-detail').textContent = detail;
+        }
+    }
+
+    function pollPaymentStatus() {
+        attempts++;
+
+        fetch(`{{ url_for('klippekort.status', reference='REFERENCE') }}`.replace('REFERENCE', reference))
+            .then(response => response.json())
+            .then(data => {
+                console.log('Payment status:', data);
+
+                if (data.status === 'success') {
+                    // Payment succeeded!
+                    updateStatus('Betaling gennemført! 🎉', data.message || 'Dine klip er blevet tilføjet.');
+                    setTimeout(() => {
+                        window.location.href = data.redirect || "{{ url_for('klippekort.success') }}";
+                    }, 1000);
+                } else if (data.status === 'cancelled') {
+                    // Payment cancelled
+                    updateStatus('Betaling annulleret', data.message || 'Du har annulleret betalingen.');
+                    setTimeout(() => {
+                        window.location.href = data.redirect || "{{ url_for('klippekort.cart') }}";
+                    }, 2000);
+                } else if (data.status === 'error') {
+                    // Error occurred
+                    updateStatus('Der opstod en fejl', data.message || 'Prøv venligst igen.');
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('klippekort.cart') }}";
+                    }, 3000);
+                } else if (data.status === 'pending') {
+                    // Still waiting - continue polling
+                    if (attempts < maxAttempts) {
+                        setTimeout(pollPaymentStatus, 2000); // Poll every 2 seconds
+                    } else {
+                        // Timeout
+                        updateStatus('Det tager længere tid end forventet',
+                            'Tjek din kreditoversigt om lidt for at se om betalingen er gennemført.');
+                        document.getElementById('fallback-link').style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error polling status:', error);
+                if (attempts < maxAttempts) {
+                    setTimeout(pollPaymentStatus, 2000);
+                } else {
+                    updateStatus('Kunne ikke verificere status',
+                        'Tjek din kreditoversigt om lidt.');
+                    document.getElementById('fallback-link').style.display = 'block';
+                }
+            });
+    }
+
+    // Show fallback link after 30 seconds
+    setTimeout(() => {
+        if (attempts > 0 && attempts < maxAttempts) {
+            document.getElementById('fallback-link').style.display = 'block';
+        }
+    }, 30000);
+
+    // Start polling
+    setTimeout(pollPaymentStatus, 1000); // Wait 1 second before first poll
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Betaling gennemført - DgP Intra{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 px-sm-2">
+    <!-- Hero section with success message -->
+    <div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+        <div class="container-fluid py-2 text-center">
+            <div class="mb-3">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+            </div>
+            <h1 class="display-6 fw-semibold mb-2">Betaling gennemført!</h1>
+            <p class="fs-5 mb-0">Tak for dit køb. Dine klip er nu tilføjet til din konto.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-8">
+
+            <!-- Account summary -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+                    <h2 class="h5 mb-0">Din konto</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 text-center">
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="text-muted small mb-1">Nuværende klip</div>
+                                <div class="h2 mb-0 text-brand">{{ current_user.credit }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="text-muted small mb-1">Skylder</div>
+                                <div class="h2 mb-0">{{ current_user.owes }} kr.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3">
+                                <div class="text-muted small mb-1">Status</div>
+                                <span class="badge text-bg-success fs-6">Aktiv</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-3">
+                        <div class="card-body text-center d-flex flex-column">
+                            <div class="mb-3">
+                                <i class="bi bi-house-door text-brand" style="font-size: 2rem;"></i>
+                            </div>
+                            <h3 class="h6 mb-2">Gå til dashboard</h3>
+                            <p class="text-body-secondary small mb-3">Se dagens menu og tilmeld dig frokost</p>
+                            <div class="mt-auto">
+                                <a href="{{ url_for('dashboard.view') }}" class="btn btn-brand w-100 rounded-2">
+                                    Gå til dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-3">
+                        <div class="card-body text-center d-flex flex-column">
+                            <div class="mb-3">
+                                <i class="bi bi-list-ul text-brand" style="font-size: 2rem;"></i>
+                            </div>
+                            <h3 class="h6 mb-2">Se kreditoversigt</h3>
+                            <p class="text-body-secondary small mb-3">Se alle dine transaktioner</p>
+                            <div class="mt-auto">
+                                <a href="{{ url_for('credit.ledger') }}" class="btn btn-outline-dark w-100 rounded-2">
+                                    Kreditoversigt
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-3">
+                        <div class="card-body text-center d-flex flex-column">
+                            <div class="mb-3">
+                                <i class="bi bi-plus-circle text-brand" style="font-size: 2rem;"></i>
+                            </div>
+                            <h3 class="h6 mb-2">Køb flere klip</h3>
+                            <p class="text-body-secondary small mb-3">Har du brug for flere?</p>
+                            <div class="mt-auto">
+                                <a href="{{ url_for('klippekort.cart') }}"
+                                    class="btn btn-outline-secondary w-100 rounded-2">
+                                    Køb mere
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Information about payment -->
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body">
+                    <h3 class="h6 mb-3">Om din betaling</h3>
+                    <ul class="mb-0 text-body-secondary">
+                        <li class="mb-2">Din betaling er behandlet via MobilePay</li>
+                        <li class="mb-2">Du modtager en kvittering i MobilePay-appen</li>
+                        <li class="mb-2">Klippene er tilgængelige med det samme</li>
+                        <li>Du kan se alle dine transaktioner i kreditoversigten</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Support information -->
+            <div class="alert alert-soft mt-4">
+                <h4 class="h6 mb-2">
+                    <i class="bi bi-info-circle me-2"></i>Har du spørgsmål?
+                </h4>
+                <p class="mb-0 small">
+                    Hvis du har problemer med din betaling eller har spørgsmål til klippekortordningen,
+                    kontakt venligst administrationen eller køkkenpersonalet.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
