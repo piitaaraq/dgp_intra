@@ -19,10 +19,26 @@
                     Ikke bogført:
                     {% if pending_delta >= 0 %}+{{ pending_delta }}{% else %}{{ pending_delta }}{% endif %}
                 </span>
+
+                <!-- NEW: Amount owed badge -->
+                {% if current_user.owes > 0 %}
+                <span class="badge bg-warning text-dark rounded-pill">
+                    Skylder: {{ current_user.owes }} kr.
+                </span>
+                {% endif %}
             </div>
 
             <!-- Row 2: buy buttons -->
             <div class="d-flex flex-wrap gap-2">
+                <!-- NEW: Primary button to klippekort (when active) -->
+                <!-- Uncomment when MobilePay is live: -->
+                <!--
+                <a href="{{ url_for('klippekort.cart') }}" class="btn btn-brand rounded-pill px-3">
+                    <i class="bi bi-phone me-1"></i>Køb klip med MobilePay
+                </a>
+                -->
+
+                <!-- Keep these for now (manual purchase fallback) -->
                 <form method="POST" action="{{ url_for('credit.buy') }}" class="m-0">
                     <input type="hidden" name="amount" value="1">
                     <button type="submit" class="btn btn-outline-dark rounded-pill px-3">
@@ -40,7 +56,7 @@
         </div>
     </div>
 
-
+    <!-- Rest of template stays the same... -->
     <!-- Filters -->
     <div class="card border-0 shadow-sm rounded-3 mb-3">
         <div class="card-body">

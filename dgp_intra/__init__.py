@@ -8,8 +8,9 @@ def create_app():
     load_dotenv()
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.config['CELERY_BROKER_URL'] = app.config.get('broker_url')
-    app.config['CELERY_RESULT_BACKEND'] = app.config.get('result_backend')
+
+    app.config['broker_url'] = 'redis://localhost:6379/0'
+    app.config['result_backend'] = 'redis://localhost:6379/0'
     
     # Initialize extensions
     db.init_app(app)
@@ -18,10 +19,8 @@ def create_app():
     login_manager.login_view = 'auth.login'
     mail.init_app(app)
     
-    # Initialize Celery only when not running Flask CLI
-    import sys
-    if not sys.argv[0].endswith('flask'):
-        init_celery(app)
+    # Always initialize Celery - it's safe to call
+    init_celery(app)
     
     # Register blueprints
     from dgp_intra.routes import register_blueprints

@@ -12,8 +12,8 @@ flask_app = create_app()
 def make_celery(app):
     celery = Celery(
         app.import_name,
-        broker=app.config['broker_url'],
-        backend=app.config['result_backend'],
+        broker=app.config.get('broker_url', 'redis://localhost:6379/0'),
+        backend=app.config.get('result_backend', 'redis://localhost:6379/0'),
     )
     celery.conf.update(app.config)
     celery.conf.task_default_queue = 'dgp_intra'
