@@ -12,7 +12,8 @@
     <!-- Merriweather -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 
 <body>
@@ -32,40 +33,35 @@
                 <h3 class="display-5 fw-semibold text-primary mb-2">Ullumi nerisassat</h3>
                 <p class="fs-3 text-muted mb-0">Dagens menu</p>
             </div>
-
-            <!-- Lunch -->
-            {% if lunch %}
-            <div class="mb-5 text-start">
-                <div class="d-flex align-items-center gap-4 mb-4">
-                    <span class="badge bg-primary rounded-circle"
-                        style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">🍽️</span>
-                    <div>
-                        <h4 class="display-6 fw-semibold mb-1">Ullup qeqqanut</h4>
-                        <p class="fs-4 text-muted mb-0">Frokost</p>
+            <div class="row justify-content-center">
+                <!-- Lunch -->
+                {% if lunch %}
+                <div class="col-md-5 mb-5 text-start">
+                    <div class="d-flex align-items-center gap-4 mb-4">
+                        <i class="fa-solid fa-utensils fa-2xl"></i>
+                        <div>
+                            <h4 class="display-6 fw-semibold mb-1">Ullup qeqqanut</h4>
+                            <p class="fs-4 text-muted mb-0">Frokost</p>
+                        </div>
                     </div>
-                </div>
-                <div class="ps-5 ms-4">
                     <p class="display-6 mb-0">{{ lunch }}</p>
                 </div>
-            </div>
-            {% endif %}
+                {% endif %}
 
-            <!-- Dinner -->
-            {% if dinner %}
-            <div class="text-start">
-                <div class="d-flex align-items-center gap-4 mb-4">
-                    <span class="badge bg-primary rounded-circle"
-                        style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">🍽️</span>
-                    <div>
-                        <h4 class="display-6 fw-semibold mb-1">Unnukkut</h4>
-                        <p class="fs-4 text-muted mb-0">Aftensmad</p>
+                <!-- Dinner -->
+                {% if dinner %}
+                <div class="col-md-5 text-start">
+                    <div class="d-flex align-items-center gap-4 mb-4">
+                        <i class="fa-solid fa-utensils fa-2xl"></i>
+                        <div>
+                            <h4 class="display-6 fw-semibold mb-1">Unnukkut</h4>
+                            <p class="fs-4 text-muted mb-0">Aftensmad</p>
+                        </div>
                     </div>
-                </div>
-                <div class="ps-5 ms-4">
                     <p class="display-6 mb-0">{{ dinner }}</p>
                 </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 
