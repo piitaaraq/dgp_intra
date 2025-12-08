@@ -91,8 +91,22 @@
         <h2 class="h5 mb-0">🏥 Patient Menu</h2>
       </div>
       <div class="card-body p-4">
-        <div class="alert alert-info border-0 rounded-3 mb-4">
+        <div class="alert alert-info border-0 rounded-3 mb-3">
           <small>💡 Menu for patienter (frokost og aftensmad)</small>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="alert alert-light border rounded-3 mb-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="fw-semibold mb-1">📤 Upload fra Word-dokument</div>
+              <small class="text-muted">Upload ugemenuen direkte fra .docx fil</small>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-2" data-bs-toggle="modal"
+              data-bs-target="#uploadModal">
+              Vælg fil
+            </button>
+          </div>
         </div>
 
         <form method="POST" class="d-flex flex-column gap-3">
@@ -168,7 +182,7 @@
           <div>
             <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
               <span class="badge bg-success rounded-circle"
-                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">5</span>
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">6</span>
               Lørdag
             </label>
             <textarea name="patients_saturday" class="form-control rounded-2 mb-2" rows="2"
@@ -181,7 +195,7 @@
           <div>
             <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
               <span class="badge bg-success rounded-circle"
-                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">5</span>
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">7</span>
               Søndag
             </label>
             <textarea name="patients_sunday" class="form-control rounded-2 mb-2" rows="2"
@@ -206,6 +220,44 @@
     <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-2">
       ← Tilbage til Admin Dashboard
     </a>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-3 border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-semibold" id="uploadModalLabel">📤 Upload Patient Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ url_for('admin.upload_patients_menu') }}" enctype="multipart/form-data">
+        <div class="modal-body px-4 py-3">
+          <div class="mb-3">
+            <label for="menu_file" class="form-label fw-semibold">Vælg Word-dokument</label>
+            <input type="file" class="form-control rounded-2" id="menu_file" name="menu_file" accept=".docx" required>
+            <div class="form-text mt-2">
+              Upload et .docx dokument med ugemenuen.
+            </div>
+          </div>
+
+          <div class="alert alert-info border-0 rounded-3 mb-0">
+            <div class="fw-semibold mb-2">✅ Systemet læser automatisk:</div>
+            <ul class="mb-0 small">
+              <li>Ugenummer fra dokumentet</li>
+              <li>Alle "Varmt" retter for frokost (mandag-søndag)</li>
+              <li>Alle "Varmt" retter for aftensmad (mandag-søndag)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary rounded-2" data-bs-dismiss="modal">Annuller</button>
+          <button type="submit" class="btn btn-brand rounded-2">
+            📤 Upload menu
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
