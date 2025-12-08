@@ -93,6 +93,7 @@ def mark_paid(user_id):
     db.session.commit()
     flash(f"{user.name} er markeret som betalt. ({len(pending_purchases)} køb bogført)")
     return redirect(url_for('admin.dashboard'))
+
 @bp.route("/menu", methods=["GET", "POST"])
 @login_required
 def menu_input():
@@ -100,6 +101,7 @@ def menu_input():
         abort(403)
     
     current_week = date.today().strftime("%Y-W%V")
+    week_display = f"Uge {date.today().strftime('%V')}"
     
     # Fetch both menus
     weekly_menu = WeeklyMenu.query.filter_by(week=current_week).first()
@@ -128,12 +130,15 @@ def menu_input():
             patients_menu.wednesday = request.form.get('patients_wednesday')
             patients_menu.thursday = request.form.get('patients_thursday')
             patients_menu.friday = request.form.get('patients_friday')
-            # Dinner - THIS IS WHAT YOU NEED TO ADD
+            patients_menu.saturday = request.form.get('patients_saturday')
+            patients_menu.sunday = request.form.get('patients_sunday')
             patients_menu.monday_dinner = request.form.get('patients_monday_dinner')
             patients_menu.tuesday_dinner = request.form.get('patients_tuesday_dinner')
             patients_menu.wednesday_dinner = request.form.get('patients_wednesday_dinner')
             patients_menu.thursday_dinner = request.form.get('patients_thursday_dinner')
             patients_menu.friday_dinner = request.form.get('patients_friday_dinner')
+            patients_menu.saturday_dinner = request.form.get('patients_saturday_dinner')
+            patients_menu.sunday_dinner = request.form.get('patients_sunday_dinner')
             db.session.add(patients_menu)
             flash("Patient menu gemt for denne uge.", "success")
         
@@ -148,5 +153,5 @@ def menu_input():
         "admin_menu.html", 
         weekly_menu=weekly_menu,
         patients_menu=patients_menu,
-        current_week=current_week
+        current_week=week_display
     )

@@ -164,6 +164,32 @@
               placeholder="Aftensmad">{{ patients_menu.friday_dinner if patients_menu else '' }}</textarea>
           </div>
 
+          <!-- Saturday -->
+          <div>
+            <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-success rounded-circle"
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">5</span>
+              Lørdag
+            </label>
+            <textarea name="patients_saturday" class="form-control rounded-2 mb-2" rows="2"
+              placeholder="Frokost">{{ patients_menu.saturday if patients_menu else '' }}</textarea>
+            <textarea name="patients_saturday_dinner" class="form-control rounded-2" rows="2"
+              placeholder="Aftensmad">{{ patients_menu.saturday_dinner if patients_menu else '' }}</textarea>
+          </div>
+
+          <!-- Sunday -->
+          <div>
+            <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-success rounded-circle"
+                style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">5</span>
+              Søndag
+            </label>
+            <textarea name="patients_sunday" class="form-control rounded-2 mb-2" rows="2"
+              placeholder="Frokost">{{ patients_menu.sunday if patients_menu else '' }}</textarea>
+            <textarea name="patients_sunday_dinner" class="form-control rounded-2" rows="2"
+              placeholder="Aftensmad">{{ patients_menu.sunday_dinner if patients_menu else '' }}</textarea>
+          </div>
+
           <div class="d-flex gap-2 mt-2 pt-3 border-top">
             <button type="submit" class="btn btn-brand rounded-2 px-4">
               💾 Gem patient menu

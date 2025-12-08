@@ -35,4 +35,4 @@ class Config:
     VIPPS_MSN = os.environ.get('VIPPS_MSN', 'mock')
     
     # Klippekort pricing
-    KLIPPEKORT_PRICE_PER_CLIP = int(os.environ.get('KLIPPEKORT_PRICE_PER_CLIP', '22'))
+    KLIPPEKORT_PRICE_PER_CLIP = int(os.environ.get('KLIPPEKORT_PRICE_PER_CLIP', '24'))

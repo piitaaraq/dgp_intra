@@ -65,12 +65,16 @@ class PatientsMenu(db.Model):
     wednesday = db.Column(db.String(200))
     thursday = db.Column(db.String(200))
     friday = db.Column(db.String(200))
+    saturday = db.Column(db.String(200))
+    sunday = db.Column(db.String(200))
     #dinner menu for patients
     monday_dinner = db.Column(db.String(200))
     tuesday_dinner = db.Column(db.String(200))
     wednesday_dinner = db.Column(db.String(200))
     thursday_dinner = db.Column(db.String(200))
     friday_dinner = db.Column(db.String(200))
+    saturday_dinner = db.Column(db.String(200))
+    sunday_dinner = db.Column(db.String(200))
 
 class Vacation(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -24,7 +24,7 @@ def cart():
         except ValueError:
             flash("Ugyldigt antal klip.", "error")
     
-    price_per_clip = current_app.config.get('KLIPPEKORT_PRICE_PER_CLIP', 22)
+    price_per_clip = current_app.config.get('KLIPPEKORT_PRICE_PER_CLIP', 24)
     
     return render_template('klippekort/cart.html', price_per_clip=price_per_clip)
 
@@ -37,7 +37,7 @@ def initiate(amount):
         flash("Ugyldigt antal klip.", "error")
         return redirect(url_for('klippekort.cart'))
     
-    price_per_clip = current_app.config.get('KLIPPEKORT_PRICE_PER_CLIP', 22)
+    price_per_clip = current_app.config.get('KLIPPEKORT_PRICE_PER_CLIP', 24)
     total_dkk = amount * price_per_clip
     
     # Generate unique reference
@@ -153,7 +153,7 @@ def status(reference):
                     
                     # Calculate amount from transaction
                     amount_dkk = tx.amount_dkk_ore / 100
-                    clips = int(amount_dkk / current_app.config.get('KLIPPEKORT_PRICE_PER_CLIP', 22))
+                    clips = int(amount_dkk / current_app.config.get('KLIPPEKORT_PRICE_PER_CLIP', 24))
                     
                     user.credit += clips
                     tx.delta_credits = clips
