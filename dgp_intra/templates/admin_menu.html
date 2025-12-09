@@ -92,12 +92,13 @@
       </div>
       <div class="card-body p-4">
         <div class="alert alert-info border-0 rounded-3 mb-3">
-          <small>💡 Menu for patienter (frokost og aftensmad)</small>
+          <small>💡 Menu for patienter - frokost og aftensmad. Du kan downloade menuen når du har tastet retterne ind og
+            vælge hvilken farve, du vil have tabellen i.</small>
         </div>
 
-        <!-- Upload Section -->
+        <!-- Upload/Download Section -->
         <div class="alert alert-light border rounded-3 mb-4">
-          <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center justify-content-between mb-2">
             <div>
               <div class="fw-semibold mb-1">📤 Upload fra Word-dokument</div>
               <small class="text-muted">Upload ugemenuen direkte fra .docx fil</small>
@@ -107,7 +108,33 @@
               Vælg fil
             </button>
           </div>
+          {% if patients_menu %}
+          <div class="d-flex align-items-center justify-content-between pt-2 mt-2 border-top">
+            <div>
+              <div class="fw-semibold mb-1">📥 Download menuplan</div>
+              <small class="text-muted">Download nuværende menu som Word-dokument</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <input type="color" class="form-control form-control-sm form-control-color" id="menuColor" value="#4472C4"
+                title="Vælg menu farve" style="width: 50px; height: 38px;">
+              <a href="#" id="downloadMenuBtn" class="btn btn-sm btn-outline-success rounded-2"
+                onclick="downloadWithColor(event)">
+                Download
+              </a>
+            </div>
+          </div>
+          {% endif %}
         </div>
+
+        <script>
+          function downloadWithColor(event) {
+            event.preventDefault();
+            const color = document.getElementById('menuColor').value.replace('#', '');
+            const weekString = '{{ patients_menu.week if patients_menu else "" }}';
+            const url = `{{ url_for('admin.download_patients_menu', week_string='WEEK_PLACEHOLDER') }}`.replace('WEEK_PLACEHOLDER', weekString) + `?color=${color}`;
+            window.location.href = url;
+          }
+        </script>
 
         <form method="POST" class="d-flex flex-column gap-3">
           <input type="hidden" name="menu_type" value="patients" />

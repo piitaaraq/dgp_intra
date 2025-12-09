@@ -1,13 +1,15 @@
 # dgp_intra/routes/admin/__init__.py
-from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
+from flask import Blueprint, request, render_template, redirect, url_for, flash, abort, send_file
 from flask_login import login_required, current_user
 from dgp_intra.extensions import db
 from dgp_intra.models import User, LunchRegistration, WeeklyMenu, BreakfastRegistration, PatientsMenu
 from dgp_intra.models import CreditTransaction, TxType, TxStatus
 from dgp_intra.utils.menu_extraction import extract_patients_menu_from_docx
+from dgp_intra.utils.menu_generator import generate_from_patients_menu_model
 from datetime import date, timedelta, datetime
 from collections import defaultdict
 from urllib.parse import urlparse, urljoin
+import tempfile
 from werkzeug.utils import secure_filename
 import os
 
@@ -243,4 +245,59 @@ def upload_patients_menu():
         
     except Exception as e:
         flash(f'Fejl ved behandling af fil: {str(e)}', 'error')
+        return redirect(url_for('admin.menu_input'))
+    
+
+
+@bp.route("/menu/download/<week_string>")
+@login_required
+def download_patients_menu(week_string):
+    """Download patient menu as Word document."""
+    if not current_user.is_admin:
+        abort(403)
+    
+    # Fetch the menu
+    patients_menu = PatientsMenu.query.filter_by(week=week_string).first()
+    
+    if not patients_menu:
+        flash('Menu ikke fundet', 'error')
+        return redirect(url_for('admin.menu_input'))
+    
+    # Get color from query parameter, default to blue
+    base_color = request.args.get('color', '4472C4')
+    # Remove # if present
+    base_color = base_color.lstrip('#')
+    
+    try:
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp:
+            temp_path = tmp.name
+        
+        # Generate the document with custom color
+        generate_from_patients_menu_model(patients_menu, temp_path, base_color)
+        
+        # Extract week number for filename
+        week_number = week_string.split('-W')[1]
+        filename = f"Patientmenu_Uge_{week_number}.docx"
+        
+        # Send file and clean up
+        response = send_file(
+            temp_path,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        
+        # Schedule cleanup after sending
+        @response.call_on_close
+        def cleanup():
+            try:
+                os.unlink(temp_path)
+            except:
+                pass
+        
+        return response
+        
+    except Exception as e:
+        flash(f'Fejl ved generering af dokument: {str(e)}', 'error')
         return redirect(url_for('admin.menu_input'))

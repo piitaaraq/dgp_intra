@@ -50,17 +50,33 @@ def extract_patients_menu_from_docx(file_path):
     LUNCH_VARMT_ROW = 2
     DINNER_VARMT_ROW = 5
     
-    # Column mapping for days
-    # Note: Days may span multiple columns due to merged cells
-    day_columns = {
-        'monday': 2,      # Mandag
-        'tuesday': 4,     # Tirsdag  
-        'wednesday': 6,   # Onsdag
-        'thursday': 8,    # Torsdag
-        'friday': 10,     # Fredag
-        'saturday': 12,   # Lørdag
-        'sunday': 13,     # Søndag
-    }
+    # Detect document format by checking number of columns
+    num_columns = len(table.columns)
+    
+    if num_columns == 15:
+        # Original kitchen format (merged cells)
+        day_columns = {
+            'monday': 2,
+            'tuesday': 4,
+            'wednesday': 6,
+            'thursday': 8,
+            'friday': 10,
+            'saturday': 12,
+            'sunday': 13,
+        }
+    elif num_columns == 8:
+        # Generated format (clean 8 columns)
+        day_columns = {
+            'monday': 1,
+            'tuesday': 2,
+            'wednesday': 3,
+            'thursday': 4,
+            'friday': 5,
+            'saturday': 6,
+            'sunday': 7,
+        }
+    else:
+        raise ValueError(f"Uventet tabel format: {num_columns} kolonner. Forventet 8 eller 15.")
     
     menu_data = {'week_number': week_number}
     
