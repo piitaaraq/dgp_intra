@@ -85,11 +85,13 @@ class LunchRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.relationship('User', backref='lunch_registrations')
 
 class BreakfastRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', backref='breakfast_registrations')
 
 class WeeklyMenu(db.Model):
     id = db.Column(db.Integer, primary_key=True)
