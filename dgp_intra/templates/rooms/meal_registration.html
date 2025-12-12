@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}{{ meal_name }} – DgP Intra{% endblock %}
+
+{% block content %}
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="display-6 fw-semibold mb-0">
+            {% if meal_type == 'breakfast' %}🍳{% elif meal_type == 'lunch' %}🍽️{% else %}🌙{% endif %}
+            {{ meal_name }}
+        </h1>
+        <span class="badge bg-primary fs-5">{{ today.strftime('%d/%m/%Y') }}</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3">
+        <div class="col-6">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_registered }}</div>
+                <div class="stat-label">Registreret</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_billable }}</div>
+                <div class="stat-label">
+                    {% if meal_type == 'breakfast' %}
+                    Betalende (0)
+                    {% else %}
+                    Betalende pårørende
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick nav to other meals -->
+<div class="mb-4">
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('rooms.meal_registration', meal_type='breakfast') }}"
+            class="btn btn-outline-primary {% if meal_type == 'breakfast' %}active{% endif %}">
+            🍳 Morgenmad
+        </a>
+        <a href="{{ url_for('rooms.meal_registration', meal_type='lunch') }}"
+            class="btn btn-outline-primary {% if meal_type == 'lunch' %}active{% endif %}">
+            🍽️ Frokost
+        </a>
+        <a href="{{ url_for('rooms.meal_registration', meal_type='dinner') }}"
+            class="btn btn-outline-primary {% if meal_type == 'dinner' %}active{% endif %}">
+            🌙 Aftensmad
+        </a>
+    </div>
+    <a href="{{ url_for('rooms.meal_summary') }}" class="btn btn-outline-secondary ms-2">
+        📊 Oversigt
+    </a>
+</div>
+
+<!-- Rooms by Floor -->
+{% for floor in [1, 2, 3, 4] %}
+{% if floor in rooms_by_floor %}
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-header bg-accent-1 border-accent-1 rounded-top-3 py-3">
+        <h3 class="h5 mb-0">{{ floor }}. sal</h3>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-3">
+            {% for room in rooms_by_floor[floor] %}
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                <div class="meal-room-card {% if room.registration %}registered{% else %}unregistered{% endif %}"
+                    data-room-id="{{ room.id }}" data-room-number="{{ room.room_number }}"
+                    data-total-occupants="{{ room.total_occupants }}" data-patient-count="{{ room.patient_count }}"
+                    data-relative-count="{{ room.relative_count }}"
+                    data-registered="{% if room.registration %}true{% else %}false{% endif %}"
+                    data-registered-count="{% if room.registration %}{{ room.registration.people_count }}{% else %}0{% endif %}"
+                    data-registered-patients="{% if room.registration %}{{ room.registration.patients_count }}{% else %}0{% endif %}"
+                    data-registered-relatives="{% if room.registration %}{{ room.registration.relatives_count }}{% else %}0{% endif %}"
+                    onclick="openMealModal(this)">
+
+                    <div class="room-number">{{ room.room_number }}</div>
+
+                    {% if room.registration %}
+                    <div class="registered-badge">
+                        ✓ {{ room.registration.people_count }}
+                    </div>
+                    {% else %}
+                    <div class="occupant-count">
+                        {{ room.total_occupants }} pers.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<!-- Registration Modal -->
+<div class="modal fade" id="mealModal" tabindex="-1" aria-labelledby="mealModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-semibold" id="mealModalLabel">
+                    Værelse <span id="modalRoomNumber"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <div id="modalContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #4472C4;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .meal-room-card {
+        padding: 1rem;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .meal-room-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .meal-room-card.unregistered {
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+
+    .meal-room-card.registered {
+        background-color: #d1e7dd;
+        border-color: #198754;
+    }
+
+    .room-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .occupant-count {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .registered-badge {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #198754;
+    }
+</style>
+
+<script>
+    const mealType = "{{ meal_type }}";
+
+    function openMealModal(element) {
+        const roomId = element.dataset.roomId;
+        const roomNumber = element.dataset.roomNumber;
+        const totalOccupants = parseInt(element.dataset.totalOccupants);
+        const patientCount = parseInt(element.dataset.patientCount);
+        const relativeCount = parseInt(element.dataset.relativeCount);
+        const isRegistered = element.dataset.registered === 'true';
+        const registeredCount = parseInt(element.dataset.registeredCount);
+
+        // Get registered breakdown if available
+        const registeredPatients = parseInt(element.dataset.registeredPatients || 0);
+        const registeredRelatives = parseInt(element.dataset.registeredRelatives || 0);
+
+        document.getElementById('modalRoomNumber').textContent = roomNumber;
+
+        let content = '<div class="mb-3">';
+        content += '<h6>Belægning</h6>';
+        content += `<p class="mb-0"><strong>Patienter:</strong> ${patientCount}<br>`;
+        content += `<strong>Pårørende:</strong> ${relativeCount}<br>`;
+        content += `<strong>Total:</strong> ${totalOccupants} personer</p>`;
+        content += '</div>';
+
+        if (isRegistered) {
+            content += '<div class="alert alert-success mb-3">';
+            content += `✓ Registreret: ${registeredCount} personer`;
+            content += '</div>';
+        }
+
+        content += '<div class="mb-3">';
+        content += '<h6>Hvem spiser?</h6>';
+        content += '<div class="d-grid gap-2">';
+
+        // Generate buttons based on room occupants
+        // Button for just patient(s)
+        if (patientCount > 0) {
+            const patientLabel = patientCount === 1 ? 'Patient' : `${patientCount} Patienter`;
+            const isActive = isRegistered && registeredPatients === patientCount && registeredRelatives === 0;
+            const btnClass = isActive ? 'btn-success' : 'btn-outline-primary';
+            content += `<button class="btn ${btnClass} btn-lg" onclick="registerMeal(${roomId}, ${patientCount}, ${patientCount}, 0)">${patientLabel}</button>`;
+        }
+
+        // Button for just relative(s) (if patient not eating)
+        if (relativeCount > 0) {
+            const relativeLabel = relativeCount === 1 ? 'Pårørende' : `${relativeCount} Pårørende`;
+            const isActive = isRegistered && registeredPatients === 0 && registeredRelatives === relativeCount;
+            const btnClass = isActive ? 'btn-success' : 'btn-outline-primary';
+            content += `<button class="btn ${btnClass} btn-lg" onclick="registerMeal(${roomId}, ${relativeCount}, 0, ${relativeCount})">${relativeLabel}</button>`;
+        }
+
+        // Button for both (if room has both)
+        if (patientCount > 0 && relativeCount > 0) {
+            const totalLabel = `Begge (${totalOccupants})`;
+            const isActive = isRegistered && registeredPatients === patientCount && registeredRelatives === relativeCount;
+            const btnClass = isActive ? 'btn-success' : 'btn-outline-primary';
+            content += `<button class="btn ${btnClass} btn-lg" onclick="registerMeal(${roomId}, ${totalOccupants}, ${patientCount}, ${relativeCount})">${totalLabel}</button>`;
+        }
+
+        content += '</div>';
+        content += '</div>';
+
+        if (isRegistered) {
+            content += '<div class="mt-3">';
+            content += `<button class="btn btn-outline-danger btn-sm w-100" onclick="unregisterMeal(${roomId})">Fjern registrering</button>`;
+            content += '</div>';
+        }
+
+        document.getElementById('modalContent').innerHTML = content;
+
+        const modal = new bootstrap.Modal(document.getElementById('mealModal'));
+        modal.show();
+    }
+
+    async function registerMeal(roomId, peopleCount, patientsEating, relativesEating) {
+        try {
+            const response = await fetch(`/rooms/meals/register/${roomId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    meal_type: mealType,
+                    people_count: peopleCount,
+                    patients_count: patientsEating,
+                    relatives_count: relativesEating
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fejl: ' + data.error);
+            }
+        } catch (error) {
+            alert('Der opstod en fejl');
+        }
+    }
+
+    async function unregisterMeal(roomId) {
+        if (!confirm('Er du sikker på at du vil fjerne registreringen?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/rooms/meals/unregister/${roomId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    meal_type: mealType
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fejl: ' + data.error);
+            }
+        } catch (error) {
+            alert('Der opstod en fejl');
+        }
+    }
+</script>
+
+{% endblock %}

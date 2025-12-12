@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Køkken Dashboard – DgP Intra{% endblock %}
+
+{% block content %}
+{% set weekdays_da = {
+  'Monday': 'Mandag',
+  'Tuesday': 'Tirsdag', 
+  'Wednesday': 'Onsdag',
+  'Thursday': 'Torsdag',
+  'Friday': 'Fredag',
+  'Saturday': 'Lørdag',
+  'Sunday': 'Søndag'
+} %}
+
+<!-- Hero -->
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+  <h1 class="display-6 fw-semibold mb-3">🍳 Køkken Dashboard</h1>
+  
+  <!-- Occupancy Summary -->
+  <div class="row g-2 mb-3">
+    <div class="col-md-6">
+      <p class="mb-0"><strong>I dag:</strong> {{ current_occupancy }} personer i huset</p>
+    </div>
+    <div class="col-md-6">
+      <p class="mb-0">
+        <strong>I morgen:</strong> ~{{ tomorrow_forecast }} personer
+        ({{ leaving_tomorrow }} tjekker ud, {{ arriving_tomorrow }} ankommer)
+      </p>
+    </div>
+  </div>
+  
+  <!-- Quick Links -->
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('rooms.meal_registration', meal_type='breakfast') }}" class="btn btn-primary rounded-2">
+      🍳 Registrer Morgenmad
+    </a>
+    <a href="{{ url_for('rooms.meal_registration', meal_type='lunch') }}" class="btn btn-primary rounded-2">
+      🍽️ Registrer Frokost
+    </a>
+    <a href="{{ url_for('rooms.meal_registration', meal_type='dinner') }}" class="btn btn-primary rounded-2">
+      🌙 Registrer Aftensmad
+    </a>
+    <a href="{{ url_for('rooms.meal_summary') }}" class="btn btn-outline-primary rounded-2">
+      📊 Oversigt
+    </a>
+    <a href="{{ url_for('admin.menu_input') }}" class="btn btn-outline-primary rounded-2">
+      📝 Menu Input
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Weekly Lunch Registrations -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h2 class="h5 mb-0">Personale frokost denne uge</h2>
+      </div>
+      <div class="card-body">
+        {% if grouped_registrations %}
+        <div class="accordion accordion-flush" id="registrationsAccordion">
+          {% for date, users in grouped_registrations.items()|sort %}
+          {% set date_id = date.strftime('%Y%m%d') %}
+          
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-{{ date_id }}">
+              <button class="accordion-button collapsed" type="button" 
+                      data-bs-toggle="collapse" data-bs-target="#collapse-{{ date_id }}"
+                      aria-expanded="false" aria-controls="collapse-{{ date_id }}">
+                <span class="me-2 fw-semibold">{{ weekdays_da[date.strftime('%A')] }}</span>
+                <span class="text-body-secondary">— {{ date.strftime('%d/%m') }}</span>
+                <span class="badge bg-light text-dark border ms-auto">
+                  {{ users|length }} registreret
+                </span>
+              </button>
+            </h2>
+            
+            <div id="collapse-{{ date_id }}" class="accordion-collapse collapse"
+                 aria-labelledby="heading-{{ date_id }}" data-bs-parent="#registrationsAccordion">
+              <div class="accordion-body p-0">
+                <ul class="list-group list-group-flush">
+                  {% for user in users %}
+                  <li class="list-group-item">{{ user.name }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Ingen har registreret endnu.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Friday Breakfast -->
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm rounded-3 h-100">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3 d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">Morgenmad denne fredag</h2>
+        <span class="badge bg-light text-dark border">{{ breakfast_count }} tilmeldt</span>
+      </div>
+      <div class="card-body">
+        <div class="small text-body-secondary mb-3">
+          {{ weekdays_da[breakfast_date.strftime('%A')] }} — {{ breakfast_date.strftime('%d/%m') }} · Kl. 10:00
+        </div>
+
+        {% if breakfast_users %}
+        <ul class="list-group list-group-flush">
+          {% for user in breakfast_users %}
+          <li class="list-group-item">{{ user.name }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">Ingen tilmeldinger endnu.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Tracking -->
+  <div class="col-lg-12">
+    <div class="card border-0 shadow-sm rounded-3">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h2 class="h5 mb-0">💳 Ansatte der mangler at betale for klip</h2>
+      </div>
+
+      {% if users_who_owe %}
+      <ul class="list-group list-group-flush">
+        {% for user in users_who_owe %}
+        <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="me-2">
+            <div class="fw-semibold">{{ user.name }}</div>
+            <div class="small text-body-secondary">{{ user.email }}</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border">Skylder: {{ user.owes }} DKK</span>
+            <form action="{{ url_for('admin.mark_paid', user_id=user.id) }}" method="POST" class="mb-0">
+              <button type="submit" class="btn btn-sm btn-brand rounded-2">
+                Marker som betalt
+              </button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="card-body">
+        <p class="text-muted mb-0">✓ Ingen ansatte skylder penge for klip.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

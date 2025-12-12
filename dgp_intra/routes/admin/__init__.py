@@ -2,7 +2,7 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, abort, send_file
 from flask_login import login_required, current_user
 from dgp_intra.extensions import db
-from dgp_intra.models import User, LunchRegistration, WeeklyMenu, BreakfastRegistration, PatientsMenu
+from dgp_intra.models import User, UserRole, Room, LunchRegistration, WeeklyMenu, BreakfastRegistration, PatientsMenu
 from dgp_intra.models import CreditTransaction, TxType, TxStatus
 from dgp_intra.utils.menu_extraction import extract_patients_menu_from_docx
 from dgp_intra.utils.menu_generator import generate_from_patients_menu_model
@@ -15,70 +15,206 @@ import os
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
+
 def _is_safe_url(target):
     host_url = request.host_url
     test_url = urljoin(host_url, target)
     return urlparse(test_url).scheme in ('http', 'https') and urlparse(host_url).netloc == urlparse(test_url).netloc
 
 
-@bp.route("/")
+@bp.before_request
 @login_required
+def require_admin_access():
+    """
+    Require appropriate access for admin routes.
+    - Menu routes: Kitchen staff or admin
+    - All other routes: Admin only
+    """
+    # Check if this is a menu-related route
+    is_menu_route = request.endpoint and 'menu' in request.endpoint
+    
+    if is_menu_route:
+        # Allow kitchen staff and admins for menu routes
+        if not (current_user.is_admin or current_user.is_kitchen_staff):
+            abort(403)
+    else:
+        # Require admin for all other routes
+        if not (current_user.is_admin or current_user.is_admin_role):
+            abort(403)
+
+# Replace the dashboard route in dgp_intra/routes/admin/__init__.py
+
+@bp.route("/")
 def dashboard():
-    if not current_user.is_admin:
-        abort(403)
-
-    users_who_owe = User.query.filter(User.owes > 0).all()
-
-    today = date.today()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=4)
-    friday_date = start_of_week + timedelta(days=4)
-
-    breakfast_regs = (
-        db.session.query(BreakfastRegistration, User)
-        .join(User, BreakfastRegistration.user_id == User.id)
-        .filter(BreakfastRegistration.date == friday_date)
-        .order_by(User.name)
+    """Admin dashboard with user management and system overview"""
+    # Admin-only route - handled by before_request
+    
+    # Get all users
+    all_users = User.query.order_by(User.name).all()
+    
+    # System statistics
+    total_users = len(all_users)
+    users_by_role = {}
+    for role in UserRole:
+        users_by_role[role.value] = sum(1 for u in all_users if u.role == role)
+    
+    # Get users who owe money
+    users_who_owe = User.query.filter(User.owes > 0).order_by(User.owes.desc()).all()
+    total_owed = sum(u.owes for u in users_who_owe)
+    
+    # Room statistics
+    from dgp_intra.models import Room
+    rooms = Room.query.all()
+    total_rooms = len(rooms)
+    occupied_rooms = sum(1 for r in rooms if r.is_occupied)
+    rooms_need_cleaning = sum(1 for r in rooms if r.needs_cleaning)
+    
+    # Recent activity (last 10 credit transactions)
+    from dgp_intra.models import CreditTransaction
+    recent_transactions = (
+        CreditTransaction.query
+        .order_by(CreditTransaction.created_at.desc())
+        .limit(10)
         .all()
     )
-    breakfast_users = [u for (_br, u) in breakfast_regs]
-    breakfast_count = len(breakfast_users)
-
-    raw_regs = (
-        db.session.query(LunchRegistration, User)
-        .join(User, LunchRegistration.user_id == User.id)
-        .filter(LunchRegistration.date.between(start_of_week, end_of_week))
-        .order_by(LunchRegistration.date)
-        .all()
-    )
-
-    grouped = defaultdict(list)
-    for reg, user in raw_regs:
-        grouped[reg.date].append(user)
-
+    
     return render_template(
-        'admin_dashboard.html',
+        'admin/dashboard.html',
+        all_users=all_users,
+        total_users=total_users,
+        users_by_role=users_by_role,
         users_who_owe=users_who_owe,
-        registrations=raw_regs,
-        grouped_registrations=grouped,
-        breakfast_users=breakfast_users,
-        breakfast_count=breakfast_count,
-        breakfast_date=friday_date
+        total_owed=total_owed,
+        total_rooms=total_rooms,
+        occupied_rooms=occupied_rooms,
+        rooms_need_cleaning=rooms_need_cleaning,
+        recent_transactions=recent_transactions
     )
 
+
+@bp.route("/user/<int:user_id>/edit-role", methods=["POST"])
+def edit_user_role(user_id):
+    """Change a user's role"""
+    # Admin-only route - handled by before_request
+    
+    user = User.query.get_or_404(user_id)
+    new_role = request.form.get('role')
+    
+    if new_role not in [r.value for r in UserRole]:
+        flash('Ugyldig rolle', 'error')
+        return redirect(url_for('admin.dashboard'))
+    
+    # Convert string to enum
+    user.role = UserRole(new_role)
+    db.session.commit()
+    
+    flash(f'{user.name}s rolle opdateret til {user.role_display}', 'success')
+    return redirect(url_for('admin.dashboard'))
+
+
+@bp.route("/user/<int:user_id>/toggle-admin", methods=["POST"])
+def toggle_admin(user_id):
+    """Toggle user's is_admin flag (for backward compatibility)"""
+    # Admin-only route - handled by before_request
+    
+    user = User.query.get_or_404(user_id)
+    user.is_admin = not user.is_admin
+    db.session.commit()
+    
+    status = "aktiveret" if user.is_admin else "deaktiveret"
+    flash(f'Admin adgang {status} for {user.name}', 'success')
+    return redirect(url_for('admin.dashboard'))
+
+
+@bp.route("/user/<int:user_id>/reset-password", methods=["POST"])
+def reset_user_password(user_id):
+    """Reset a user's password"""
+    # Admin-only route - handled by before_request
+    
+    user = User.query.get_or_404(user_id)
+    new_password = request.form.get('new_password')
+    
+    if not new_password or len(new_password) < 6:
+        flash('Adgangskode skal være mindst 6 tegn', 'error')
+        return redirect(url_for('admin.dashboard'))
+    
+    from werkzeug.security import generate_password_hash
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+    
+    flash(f'Adgangskode nulstillet for {user.name}', 'success')
+    return redirect(url_for('admin.dashboard'))
+
+
+@bp.route("/user/<int:user_id>/delete", methods=["POST"])
+def delete_user(user_id):
+    """Delete a user (careful!)"""
+    # Admin-only route - handled by before_request
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent deleting yourself
+    if user.id == current_user.id:
+        flash('Du kan ikke slette dig selv', 'error')
+        return redirect(url_for('admin.dashboard'))
+    
+    # Prevent deleting other admins
+    if user.is_admin or user.role == UserRole.ADMIN:
+        flash('Du kan ikke slette andre administratorer', 'error')
+        return redirect(url_for('admin.dashboard'))
+    
+    user_name = user.name
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash(f'Bruger {user_name} slettet', 'success')
+    return redirect(url_for('admin.dashboard'))
+
+
+@bp.route("/user/create", methods=["POST"])
+def create_user():
+    """Create a new user"""
+    # Admin-only route - handled by before_request
+    
+    name = request.form.get('name')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    role = request.form.get('role', 'staff')
+    
+    if not name or not email or not password:
+        flash('Alle felter er påkrævet', 'error')
+        return redirect(url_for('admin.dashboard'))
+    
+    # Check if email already exists
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        flash('Email allerede i brug', 'error')
+        return redirect(url_for('admin.dashboard'))
+    
+    from werkzeug.security import generate_password_hash
+    
+    new_user = User(
+        name=name,
+        email=email,
+        password_hash=generate_password_hash(password),
+        role=UserRole(role)
+    )
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    flash(f'Bruger {name} oprettet', 'success')
+    return redirect(url_for('admin.dashboard'))
 
 @bp.route("/mark_paid/<int:user_id>", methods=["POST"])
-@login_required
 def mark_paid(user_id):
-    if not current_user.is_admin:
-        abort(403)
-
+    # Admin-only route - handled by before_request
     user = User.query.get(user_id)
     if not user:
         flash("Bruger ikke fundet.")
         return redirect(url_for('admin.dashboard'))
 
-    # 1) Clear the user's debt (as before)
+    # 1) Clear the user's debt
     user.owes = 0
 
     # 2) Flip all pending PURCHASE transactions to POSTED and timestamp them
@@ -95,7 +231,6 @@ def mark_paid(user_id):
     for tx in pending_purchases:
         tx.status = TxStatus.POSTED
         tx.posted_at = now
-        # (delta_credits already granted at purchase time; we only change status)
 
     db.session.commit()
     flash(f"{user.name} er markeret som betalt. ({len(pending_purchases)} køb bogført)")
@@ -103,11 +238,8 @@ def mark_paid(user_id):
 
 
 @bp.route("/menu", methods=["GET", "POST"])
-@login_required
 def menu_input():
-    if not current_user.is_admin:
-        abort(403)
-    
+    # Kitchen staff allowed - handled by before_request
     current_week = date.today().strftime("%Y-W%V")
     week_display = f"Uge {date.today().strftime('%V')}"
     
@@ -166,11 +298,9 @@ def menu_input():
 
 
 @bp.route("/menu/upload", methods=["POST"])
-@login_required
 def upload_patients_menu():
     """Upload patient menu from Word document."""
-    if not current_user.is_admin:
-        abort(403)
+    # Kitchen staff allowed - handled by before_request
     
     if 'menu_file' not in request.files:
         flash('Ingen fil valgt', 'error')
@@ -203,20 +333,16 @@ def upload_patients_menu():
             return redirect(url_for('admin.menu_input'))
         
         # Calculate the ISO week string for the extracted week number
-        # Get current year
         year = date.today().year
-        # Create week string
         week_string = f"{year}-W{menu_data['week_number']:02d}"
         
         # Check if menu already exists
         existing_menu = PatientsMenu.query.filter_by(week=week_string).first()
         
         if existing_menu:
-            # Update existing menu
             patients_menu = existing_menu
             action = "opdateret"
         else:
-            # Create new menu
             patients_menu = PatientsMenu(week=week_string)
             action = "oprettet"
         
@@ -246,15 +372,12 @@ def upload_patients_menu():
     except Exception as e:
         flash(f'Fejl ved behandling af fil: {str(e)}', 'error')
         return redirect(url_for('admin.menu_input'))
-    
 
 
 @bp.route("/menu/download/<week_string>")
-@login_required
 def download_patients_menu(week_string):
     """Download patient menu as Word document."""
-    if not current_user.is_admin:
-        abort(403)
+    # Kitchen staff allowed - handled by before_request
     
     # Fetch the menu
     patients_menu = PatientsMenu.query.filter_by(week=week_string).first()
@@ -265,7 +388,6 @@ def download_patients_menu(week_string):
     
     # Get color from query parameter, default to blue
     base_color = request.args.get('color', '4472C4')
-    # Remove # if present
     base_color = base_color.lstrip('#')
     
     try:

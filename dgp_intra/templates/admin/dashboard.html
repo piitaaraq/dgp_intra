@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard – DgP Intra{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+  <h1 class="display-6 fw-semibold mb-2">👤 Admin Dashboard</h1>
+  <p class="mb-0">Brugerstyring og systemoversigt</p>
+</div>
+
+<!-- System Stats -->
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm rounded-3 text-center p-4">
+      <div class="display-4 text-primary">{{ total_users }}</div>
+      <div class="text-muted">Brugere</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm rounded-3 text-center p-4">
+      <div class="display-4 text-success">{{ occupied_rooms }}/{{ total_rooms }}</div>
+      <div class="text-muted">Værelser optaget</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm rounded-3 text-center p-4">
+      <div class="display-4 text-warning">{{ rooms_need_cleaning }}</div>
+      <div class="text-muted">Skal rengøres</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm rounded-3 text-center p-4">
+      <div class="display-4 text-danger">{{ total_owed }}</div>
+      <div class="text-muted">DKK skyldes</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- User Management -->
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm rounded-3">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3 d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">👥 Brugerstyring</h2>
+        <button class="btn btn-sm btn-primary rounded-2" data-bs-toggle="modal" data-bs-target="#createUserModal">
+          + Opret bruger
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Navn</th>
+                <th>Email</th>
+                <th>Rolle</th>
+                <th>Skylder</th>
+                <th>Handlinger</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in all_users %}
+              <tr>
+                <td>
+                  <strong>{{ user.name }}</strong>
+                  {% if user.is_admin %}<span class="badge bg-danger ms-1">Admin Flag</span>{% endif %}
+                </td>
+                <td><small>{{ user.email }}</small></td>
+                <td>
+                  <form method="POST" action="{{ url_for('admin.edit_user_role', user_id=user.id) }}" class="d-inline">
+                    <select name="role" class="form-select form-select-sm" style="width: auto; display: inline-block;" 
+                            onchange="this.form.submit()">
+                      {% for role in ['staff', 'kitchen', 'patient_admin', 'cleaning', 'admin'] %}
+                      <option value="{{ role }}" {% if user.role.value == role %}selected{% endif %}>
+                        {% if role == 'staff' %}Personale
+                        {% elif role == 'kitchen' %}Køkken
+                        {% elif role == 'patient_admin' %}Patient Admin
+                        {% elif role == 'cleaning' %}Rengøring
+                        {% elif role == 'admin' %}Administrator
+                        {% endif %}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </form>
+                </td>
+                <td>
+                  {% if user.owes > 0 %}
+                  <span class="badge bg-warning text-dark">{{ user.owes }} DKK</span>
+                  {% else %}
+                  <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" 
+                            data-bs-target="#resetPasswordModal{{ user.id }}" title="Nulstil adgangskode">
+                      🔑
+                    </button>
+                    {% if user.id != current_user.id and (not user.is_admin and user.role.value != 'admin') %}
+                    <button class="btn btn-outline-danger" data-bs-toggle="modal" 
+                            data-bs-target="#deleteUserModal{{ user.id }}" title="Slet bruger">
+                      🗑️
+                    </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Reset Password Modal -->
+              <div class="modal fade" id="resetPasswordModal{{ user.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content rounded-3">
+                    <div class="modal-header border-0">
+                      <h5 class="modal-title">Nulstil adgangskode for {{ user.name }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('admin.reset_user_password', user_id=user.id) }}">
+                      <div class="modal-body">
+                        <div class="mb-3">
+                          <label class="form-label">Ny adgangskode</label>
+                          <input type="password" name="new_password" class="form-control" required minlength="6">
+                          <small class="text-muted">Mindst 6 tegn</small>
+                        </div>
+                      </div>
+                      <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-2" data-bs-dismiss="modal">Annuller</button>
+                        <button type="submit" class="btn btn-primary rounded-2">Nulstil</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Delete User Modal -->
+              {% if user.id != current_user.id and (not user.is_admin and user.role.value != 'admin') %}
+              <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content rounded-3">
+                    <div class="modal-header border-0 bg-danger text-white rounded-top-3">
+                      <h5 class="modal-title">Slet bruger?</h5>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p>Er du sikker på at du vil slette <strong>{{ user.name }}</strong>?</p>
+                      <p class="text-danger mb-0">Dette kan ikke fortrydes!</p>
+                    </div>
+                    <div class="modal-footer border-0">
+                      <button type="button" class="btn btn-outline-secondary rounded-2" data-bs-dismiss="modal">Annuller</button>
+                      <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger rounded-2">Slet bruger</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats Sidebar -->
+  <div class="col-lg-4">
+    <!-- Roles Breakdown -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h3 class="h6 mb-0">Roller fordeling</h3>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Personale</span>
+          <span class="badge bg-light text-dark border">{{ users_by_role.staff }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Køkken</span>
+          <span class="badge bg-light text-dark border">{{ users_by_role.kitchen }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Patient Admin</span>
+          <span class="badge bg-light text-dark border">{{ users_by_role.patient_admin }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Rengøring</span>
+          <span class="badge bg-light text-dark border">{{ users_by_role.cleaning }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Administrator</span>
+          <span class="badge bg-danger">{{ users_by_role.admin }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card border-0 shadow-sm rounded-3">
+      <div class="card-header bg-accent-1 border-accent-1 rounded-top-3">
+        <h3 class="h6 mb-0">Seneste aktivitet</h3>
+      </div>
+      <div class="card-body">
+        {% if recent_transactions %}
+        <div class="list-group list-group-flush">
+          {% for tx in recent_transactions[:5] %}
+          <div class="list-group-item px-0 py-2 border-0">
+            <div class="d-flex justify-content-between">
+              <small class="fw-semibold">{{ tx.user.name }}</small>
+              <small class="text-muted">{{ tx.created_at.strftime('%d/%m %H:%M') }}</small>
+            </div>
+            <small class="text-muted">
+              {{ tx.tx_type.value }} 
+              {% if tx.delta_credits > 0 %}+{% endif %}{{ tx.delta_credits }} klip
+            </small>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">Ingen aktivitet endnu</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-3">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Opret ny bruger</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('admin.create_user') }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Navn</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Adgangskode</label>
+            <input type="password" name="password" class="form-control" required minlength="6">
+            <small class="text-muted">Mindst 6 tegn</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rolle</label>
+            <select name="role" class="form-select">
+              <option value="staff">Personale</option>
+              <option value="kitchen">Køkken</option>
+              <option value="patient_admin">Patient Admin</option>
+              <option value="cleaning">Rengøring</option>
+              <option value="admin">Administrator</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary rounded-2" data-bs-dismiss="modal">Annuller</button>
+          <button type="submit" class="btn btn-primary rounded-2">Opret bruger</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,606 @@
+{% extends "base.html" %}
+{% block title %}Værelser – DgP Intra{% endblock %}
+
+{% block content %}
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+    <h1 class="display-6 fw-semibold mb-3">🏨 Værelser</h1>
+
+    <!-- Statistics Overview -->
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_patients }}</div>
+                <div class="stat-label">Patienter</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_relatives }}</div>
+                <div class="stat-label">Pårørende</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">{{ occupied_rooms }}/{{ total_rooms }}</div>
+                <div class="stat-label">Værelser optaget</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">{{ rooms_need_cleaning }}</div>
+                <div class="stat-label">Skal rengøres</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today and Tomorrow Summary -->
+    <div class="row g-2 mb-3">
+        <div class="col-md-6">
+            <p class="mb-0"><strong>I dag:</strong> {{ total_people }} personer i huset</p>
+        </div>
+        <div class="col-md-6">
+            <p class="mb-0">
+                <strong>I morgen:</strong> ~{{ tomorrow_total }} personer
+                {% if tomorrow_total < total_people %} <span class="text-warning">⚠️ {{ total_people - tomorrow_total }}
+                    færre</span>
+                    {% elif tomorrow_total > total_people %}
+                    <span class="text-success">✓ {{ tomorrow_total - total_people }} flere</span>
+                    {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Forecast Input (Patient Admin Only) -->
+    {% if can_manage_occupancy %}
+    <div class="card border-0 bg-white p-3 rounded-3">
+        <div class="row align-items-center g-2">
+            <div class="col-md-6">
+                <label class="form-label mb-0">
+                    <strong>Forventede ankomster i morgen ({{ tomorrow_date.strftime('%d/%m') }}):</strong>
+                </label>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary" onclick="decrementForecast()">−</button>
+                    <input type="number" class="form-control text-center" id="forecastInput" min="0"
+                        value="{{ arriving_tomorrow }}" style="max-width: 100px;" readonly>
+                    <button class="btn btn-outline-secondary" onclick="incrementForecast()">+</button>
+                    <button class="btn btn-primary btn-sm" onclick="saveForecast()">Gem</button>
+                </div>
+            </div>
+        </div>
+        <small class="text-muted mt-2">
+            Tjekker ud: {{ leaving_tomorrow }} personer | Ankommer: <span id="arrivingCount">{{ arriving_tomorrow
+                }}</span> personer
+        </small>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">
+        <small>Tjekker ud i morgen: {{ leaving_tomorrow }} | Forventet ankomst: {{ arriving_tomorrow }}</small>
+    </p>
+    {% endif %}
+</div>
+
+<!-- Legend -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">📖 Farve-guide</h5>
+        <div class="row g-2">
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="room-indicator occupied-clean"></div>
+                    <span><strong>Blå:</strong> Optaget & Rent</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="room-indicator occupied-dirty"></div>
+                    <span><strong>Rød:</strong> Optaget & Skal rengøres</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="room-indicator vacant-clean"></div>
+                    <span><strong>Grå:</strong> Ledig & Rent</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="room-indicator vacant-dirty"></div>
+                    <span><strong>Orange:</strong> Ledig & Skal rengøres</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rooms by Floor -->
+{% for floor in [1, 2, 3, 4] %}
+{% if floor in rooms_by_floor %}
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-header bg-accent-1 border-accent-1 rounded-top-3 py-3">
+        <h3 class="h5 mb-0">{{ floor }}. sal ({{ rooms_by_floor[floor]|length }} værelser)</h3>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-3">
+            {% for room in rooms_by_floor[floor] %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="room-card 
+                    {% if room.is_occupied and room.cleaning_status.value == 'clean' %}occupied-clean
+                    {% elif room.is_occupied and room.cleaning_status.value == 'needs_cleaning' %}occupied-dirty
+                    {% elif not room.is_occupied and room.cleaning_status.value == 'clean' %}vacant-clean
+                    {% else %}vacant-dirty{% endif %}" data-room-id="{{ room.id }}"
+                    data-room-number="{{ room.room_number }}" data-patient-count="{{ room.patient_count }}"
+                    data-relative-count="{{ room.relative_count }}"
+                    data-cleaning-status="{{ room.cleaning_status.value }}"
+                    data-checkout-tomorrow="{{ room.checking_out_tomorrow|lower }}" onclick="openRoomModal(this)">
+
+                    <div class="room-number">{{ room.room_number }}</div>
+
+                    <div class="room-status">
+                        {% if room.is_occupied %}
+                        <div class="status-line">
+                            👤 {{ room.patient_count }} patient{% if room.patient_count != 1 %}er{% endif %}
+                        </div>
+                        {% if room.relative_count > 0 %}
+                        <div class="status-line">
+                            👥 {{ room.relative_count }} pårørende
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <div class="status-line text-muted">
+                            Ledig
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="cleaning-indicator">
+                        {% if room.cleaning_status.value == 'clean' %}
+                        ✅ Rent
+                        {% else %}
+                        🧹 Skal rengøres
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<!-- Room Details Modal -->
+<div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="roomModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-semibold" id="roomModalLabel">Værelse <span id="modalRoomNumber"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <div id="modalContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #4472C4;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .room-indicator {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        border: 2px solid #dee2e6;
+    }
+
+    .room-card {
+        padding: 1rem;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .room-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .room-card.occupied-clean {
+        background-color: #cfe2ff;
+        border-color: #4472C4;
+    }
+
+    .room-card.occupied-dirty {
+        background-color: #f8d7da;
+        border-color: #dc3545;
+    }
+
+    .room-card.vacant-clean {
+        background-color: #e9ecef;
+        border-color: #6c757d;
+    }
+
+    .room-card.vacant-dirty {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+    }
+
+    .room-indicator.occupied-clean {
+        background-color: #cfe2ff;
+        border-color: #4472C4;
+    }
+
+    .room-indicator.occupied-dirty {
+        background-color: #f8d7da;
+        border-color: #dc3545;
+    }
+
+    .room-indicator.vacant-clean {
+        background-color: #e9ecef;
+        border-color: #6c757d;
+    }
+
+    .room-indicator.vacant-dirty {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+    }
+
+    .room-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        padding: 0;
+        line-height: 1.2;
+    }
+
+    .room-status {
+        font-size: 0.875rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .status-line {
+        margin: 0;
+        padding: 0;
+        line-height: 1.5;
+    }
+
+    .cleaning-indicator {
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: auto;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Hide number input spinners */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+</style>
+
+<script>
+    const canManageOccupancy = {{ can_manage_occupancy| tojson }};
+    const canManageCleaning = {{ can_manage_cleaning| tojson }};
+
+    function incrementValue(inputId, max) {
+        const input = document.getElementById(inputId);
+        let value = parseInt(input.value);
+        if (value < max) {
+            input.value = value + 1;
+        }
+    }
+
+    function decrementValue(inputId, min) {
+        const input = document.getElementById(inputId);
+        let value = parseInt(input.value);
+        if (value > min) {
+            input.value = value - 1;
+        }
+    }
+
+    function openRoomModal(element) {
+        const roomId = element.dataset.roomId;
+        const roomNumber = element.dataset.roomNumber;
+        const patientCount = parseInt(element.dataset.patientCount);
+        const relativeCount = parseInt(element.dataset.relativeCount);
+        const cleaningStatus = element.dataset.cleaningStatus;
+
+        document.getElementById('modalRoomNumber').textContent = roomNumber;
+
+        let content = '<div class="mb-3">';
+        content += '<h6>Status</h6>';
+        content += `<p><strong>Patienter:</strong> ${patientCount}<br>`;
+        content += `<strong>Pårørende:</strong> ${relativeCount}<br>`;
+        content += `<strong>Rengøring:</strong> ${cleaningStatus === 'clean' ? '✅ Rent' : '🧹 Skal rengøres'}</p>`;
+        content += '</div>';
+
+        // Patient admin controls
+        if (canManageOccupancy) {
+            content += '<div class="mb-3">';
+            content += '<h6>Belægning</h6>';
+
+            // Patients
+            content += '<div class="mb-3">';
+            content += '<label class="form-label mb-2">Patienter (0-2)</label>';
+            content += '<div class="d-flex align-items-center gap-2">';
+            content += `<button class="btn btn-outline-secondary" onclick="decrementValue('patientCountInput', 0); event.stopPropagation();">−</button>`;
+            content += `<input type="number" class="form-control text-center" id="patientCountInput" min="0" max="2" value="${patientCount}" style="max-width: 80px;" readonly>`;
+            content += `<button class="btn btn-outline-secondary" onclick="incrementValue('patientCountInput', 2); event.stopPropagation();">+</button>`;
+            content += '</div>';
+            content += '</div>';
+
+            // Relatives
+            content += '<div class="mb-3">';
+            content += '<label class="form-label mb-2">Pårørende (0-1)</label>';
+            content += '<div class="d-flex align-items-center gap-2">';
+            content += `<button class="btn btn-outline-secondary" onclick="decrementValue('relativeCountInput', 0); event.stopPropagation();">−</button>`;
+            content += `<input type="number" class="form-control text-center" id="relativeCountInput" min="0" max="1" value="${relativeCount}" style="max-width: 80px;" readonly>`;
+            content += `<button class="btn btn-outline-secondary" onclick="incrementValue('relativeCountInput', 1); event.stopPropagation();">+</button>`;
+            content += '</div>';
+            content += '</div>';
+
+            content += '<div class="d-flex gap-2">';
+            content += `<button class="btn btn-primary btn-sm" onclick="updateOccupancy(${roomId})">Gem belægning</button>`;
+            content += `<button class="btn btn-outline-danger btn-sm" onclick="emptyRoom(${roomId})">Tøm værelse</button>`;
+            content += '</div>';
+            content += '</div>';
+        }
+
+        // Cleaning staff controls
+        if (canManageCleaning && cleaningStatus === 'needs_cleaning') {
+            content += '<div class="mb-3">';
+            content += '<h6>Rengøring</h6>';
+            content += `<button class="btn btn-success btn-sm" onclick="markCleaned(${roomId})">✅ Marker som rent</button>`;
+            content += '</div>';
+        }
+
+        // Patient admin can also mark as needs cleaning
+        if (canManageOccupancy && cleaningStatus === 'clean') {
+            content += '<div class="mb-3">';
+            content += '<h6>Rengøring</h6>';
+            content += `<button class="btn btn-warning btn-sm" onclick="markNeedsCleaning(${roomId})">🧹 Marker skal rengøres</button>`;
+            content += '</div>';
+        }
+
+        // Checkout tomorrow checkbox (Patient admin only, if room is occupied)
+        if (canManageOccupancy) {
+            const isOccupied = patientCount > 0 || relativeCount > 0;
+            const checkoutTomorrow = element.dataset.checkoutTomorrow === 'true';
+
+            if (isOccupied) {
+                content += '<div class="mb-3">';
+                content += '<div class="form-check">';
+                content += `<input class="form-check-input" type="checkbox" id="checkoutCheckbox" ${checkoutTomorrow ? 'checked' : ''}>`;
+                content += '<label class="form-check-label" for="checkoutCheckbox">';
+                content += '☑️ Tjekker ud i morgen';
+                content += '</label>';
+                content += '</div>';
+                content += `<button class="btn btn-outline-primary btn-sm mt-2" onclick="saveCheckoutStatus(${roomId})">Gem udtjekning</button>`;
+                content += '</div>';
+            }
+        }
+
+        document.getElementById('modalContent').innerHTML = content;
+
+        const modal = new bootstrap.Modal(document.getElementById('roomModal'));
+        modal.show();
+    }
+
+    async function updateOccupancy(roomId) {
+        const patientCount = parseInt(document.getElementById('patientCountInput').value);
+        const relativeCount = parseInt(document.getElementById('relativeCountInput').value);
+
+        try {
+            const response = await fetch(`/rooms/update/${roomId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'set_occupancy',
+                    patient_count: patientCount,
+                    relative_count: relativeCount
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fejl: ' + data.error);
+            }
+        } catch (error) {
+            alert('Der opstod en fejl');
+        }
+    }
+
+    async function emptyRoom(roomId) {
+        if (!confirm('Er du sikker på at du vil tømme dette værelse?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/rooms/update/${roomId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'set_occupancy',
+                    patient_count: 0,
+                    relative_count: 0
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fejl: ' + data.error);
+            }
+        } catch (error) {
+            alert('Der opstod en fejl');
+        }
+    }
+
+    async function markCleaned(roomId) {
+        try {
+            const response = await fetch(`/rooms/update/${roomId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'mark_cleaned'
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fejl: ' + data.error);
+            }
+        } catch (error) {
+            alert('Der opstod en fejl');
+        }
+    }
+
+    async function markNeedsCleaning(roomId) {
+        try {
+            const response = await fetch(`/rooms/update/${roomId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'mark_needs_cleaning'
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fejl: ' + data.error);
+            }
+        } catch (error) {
+            alert('Der opstod en fejl');
+        }
+    }
+
+    // Forecast management functions
+    function incrementForecast() {
+        const input = document.getElementById('forecastInput');
+        input.value = parseInt(input.value) + 1;
+        document.getElementById('arrivingCount').textContent = input.value;
+    }
+
+    function decrementForecast() {
+        const input = document.getElementById('forecastInput');
+        const value = parseInt(input.value);
+        if (value > 0) {
+            input.value = value - 1;
+            document.getElementById('arrivingCount').textContent = input.value;
+        }
+    }
+
+    async function saveForecast() {
+        const expectedArrivals = parseInt(document.getElementById('forecastInput').value);
+
+        try {
+            const response = await fetch('/rooms/forecast/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    expected_arrivals: expectedArrivals
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fejl: ' + data.error);
+            }
+        } catch (error) {
+            alert('Der opstod en fejl');
+        }
+    }
+
+    // Checkout tomorrow management
+    async function saveCheckoutStatus(roomId) {
+        const checkoutTomorrow = document.getElementById('checkoutCheckbox').checked;
+
+        try {
+            const response = await fetch(`/rooms/update/${roomId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'toggle_checkout_tomorrow',
+                    checkout_tomorrow: checkoutTomorrow
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Fejl: ' + data.error);
+            }
+        } catch (error) {
+            alert('Der opstod en fejl');
+        }
+    }
+</script>
+
+{% endblock %}

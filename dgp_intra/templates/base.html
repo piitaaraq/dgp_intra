@@ -5,10 +5,8 @@
   <meta charset="UTF-8" />
   <title>{% block title %}DgP Intra{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-
   <!-- Theme stylesheet (your updated single-:root styles) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,7 +16,6 @@
 </head>
 
 <body>
-
   <nav class="navbar bg-brand navbar-light border-bottom border-accent-1 mb-4">
     <div class="container-fluid">
       <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('dashboard.view') }}">
@@ -26,25 +23,61 @@
         DgP Intra
       </a>
 
+      <!-- Horizontal nav for main sections (desktop only) -->
+      {% if current_user.is_authenticated %}
+      <nav class="nav d-none d-lg-flex">
+        <a class="nav-link" href="{{ url_for('dashboard.view') }}">Hjem</a>
+        <a class="nav-link" href="{{ url_for('rooms.index') }}">Værelser</a>
+        {% if current_user.is_kitchen_staff %}
+        <a class="nav-link" href="{{ url_for('rooms.kitchen_dashboard') }}">Køkken</a>
+        {% endif %}
+        {% if current_user.is_admin or current_user.is_admin_role %}
+        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+
       <!-- Toggler: always shown -->
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
         aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
+      <!-- Collapsible menu -->
       <div class="collapse navbar-collapse justify-content-end" id="mainNav">
         {% if current_user.is_authenticated %}
         <ul class="navbar-nav text-end mb-2 mb-lg-0">
-
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('credit.ledger') }}">Kreditoversigt</a>
           </li>
-
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('profile.change_password') }}">Skift adgangskode</a>
           </li>
 
-          {% if current_user.is_admin %}
+          {# All logged-in users can see rooms #}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('rooms.index') }}">Værelser</a>
+          </li>
+
+          {# Cleaning staff can see logs #}
+          {% if current_user.is_cleaning_staff or current_user.is_patient_admin %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('rooms.cleaning_logs') }}">Rengøringslog</a>
+          </li>
+          {% endif %}
+
+          {# Kitchen staff can access menu management and meal planning #}
+          {% if current_user.is_kitchen_staff %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin.menu_input') }}">Køkken</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('rooms.meal_planning') }}">Måltidsplan</a>
+          </li>
+          {% endif %}
+
+          {# Admin gets full dashboard access #}
+          {% if current_user.is_admin or current_user.is_admin_role %}
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
           </li>
@@ -53,18 +86,14 @@
           <li>
             <hr class="dropdown-divider my-1">
           </li>
-
           <li class="nav-item">
             <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">Log ud</a>
           </li>
-
         </ul>
         {% endif %}
       </div>
     </div>
   </nav>
-
-
   <main class="container">
     {% with messages = get_flashed_messages() %} {% if messages %}
     <div class="alert alert-soft">
@@ -74,7 +103,6 @@
     </div>
     {% endif %} {% endwith %} {% block content %}{% endblock %}
   </main>
-
   <footer class="container mt-4 mb-3 p-3">
     <hr class="mt-4 mb-3 border-accent-1" />
     <div class="text-end">
@@ -85,13 +113,13 @@
         <a href="{{ url_for('public.terms') }}">Handelsbetingelser</a>
       </p>
       <p class="mb-0">
-        <a href="mailto:support@mail.patienthjem.dk?subject=DgP%20Intra%20support&body=Venligst%20beskriv%20problemet.">
+        <a
+          href="/cdn-cgi/l/email-protection#c7b4b2b7b7a8b5b387aaa6aeabe9b7a6b3aea2a9b3afada2aae9a3acf8b4b2a5ada2a4b3fa83a097e2f5f78ea9b3b5a6e2f5f7b4b2b7b7a8b5b3e1a5a8a3befa91a2a9abaea0b4b3e2f5f7a5a2b4acb5aeb1e2f5f7b7b5a8a5aba2aaa2b3e9">
           Send en e-mail til support
         </a>
       </p>
     </div>
   </footer>
-
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

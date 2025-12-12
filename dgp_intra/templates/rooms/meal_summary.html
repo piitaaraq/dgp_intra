@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Måltidsoversigt – DgP Intra{% endblock %}
+
+{% block content %}
+<div class="p-4 p-md-5 mb-4 hero bg-accent-2">
+    <h1 class="display-6 fw-semibold mb-2">📊 Måltidsoversigt</h1>
+    <p class="mb-2">{{ today.strftime('%d. %B %Y') }}</p>
+
+    <div class="row g-2">
+        <div class="col-md-6">
+            <p class="mb-0"><strong>I dag:</strong> {{ current_occupancy }} personer i huset</p>
+        </div>
+        <div class="col-md-6">
+            <p class="mb-0">
+                <strong>I morgen:</strong> ~{{ tomorrow_forecast }} personer
+                ({{ leaving_tomorrow }} tjekker ud, {{ arriving_tomorrow }} ankommer)
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+            <div class="card-body text-center p-4">
+                <h3 class="h5 mb-3">🍳 Morgenmad</h3>
+                <div class="display-4 text-primary mb-2">{{ totals.breakfast.count }}</div>
+                <p class="text-muted mb-0">Betalende: {{ totals.breakfast.billable }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+            <div class="card-body text-center p-4">
+                <h3 class="h5 mb-3">🍽️ Frokost</h3>
+                <div class="display-4 text-success mb-2">{{ totals.lunch.count }}</div>
+                <p class="text-muted mb-0">Betalende: {{ totals.lunch.billable }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 h-100">
+            <div class="card-body text-center p-4">
+                <h3 class="h5 mb-3">🌙 Aftensmad</h3>
+                <div class="display-4 text-warning mb-2">{{ totals.dinner.count }}</div>
+                <p class="text-muted mb-0">Betalende: {{ totals.dinner.billable }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick nav -->
+<div class="mb-4">
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('rooms.meal_registration', meal_type='breakfast') }}" class="btn btn-outline-primary">
+            🍳 Morgenmad
+        </a>
+        <a href="{{ url_for('rooms.meal_registration', meal_type='lunch') }}" class="btn btn-outline-primary">
+            🍽️ Frokost
+        </a>
+        <a href="{{ url_for('rooms.meal_registration', meal_type='dinner') }}" class="btn btn-outline-primary">
+            🌙 Aftensmad
+        </a>
+    </div>
+</div>
+
+<!-- Detailed Breakdown -->
+{% for meal_key, meal_name, icon in [('breakfast', 'Morgenmad', '🍳'), ('lunch', 'Frokost', '🍽️'), ('dinner',
+'Aftensmad', '🌙')] %}
+{% if by_meal[meal_key] %}
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-header bg-accent-1 border-accent-1 rounded-top-3 py-3">
+        <h3 class="h5 mb-0">{{ icon }} {{ meal_name }}</h3>
+    </div>
+    <div class="card-body p-4">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Værelse</th>
+                        <th>Personer</th>
+                        <th>Patienter</th>
+                        <th>Pårørende</th>
+                        <th>Betalende</th>
+                        <th>Tidspunkt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in by_meal[meal_key] %}
+                    <tr>
+                        <td><strong>{{ reg.room.room_number }}</strong></td>
+                        <td>{{ reg.people_count }}</td>
+                        <td>{{ reg.patients_count }}</td>
+                        <td>{{ reg.relatives_count }}</td>
+                        <td>
+                            {% if reg.billable_count > 0 %}
+                            <span class="badge bg-warning text-dark">{{ reg.billable_count }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ reg.registered_at.strftime('%H:%M') }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th>Total</th>
+                        <th>{{ totals[meal_key].count }}</th>
+                        <th>-</th>
+                        <th>-</th>
+                        <th>{{ totals[meal_key].billable }}</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-header bg-accent-1 border-accent-1 rounded-top-3 py-3">
+        <h3 class="h5 mb-0">{{ icon }} {{ meal_name }}</h3>
+    </div>
+    <div class="card-body p-4 text-center text-muted">
+        Ingen registreringer endnu
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<div class="mt-3">
+    <a href="{{ url_for('rooms.index') }}" class="btn btn-outline-secondary rounded-2">
+        ← Tilbage til Værelser
+    </a>
+</div>
+
+{% endblock %}

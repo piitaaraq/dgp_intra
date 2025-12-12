@@ -11,6 +11,7 @@ def register_blueprints(app):
     from .vacations import bp as vacations_bp
     from .events import bp as events_bp
     from .admin import bp as admin_bp
+    from .rooms import bp as rooms_bp
     from dgp_intra.routes import klippekort
 
     app.register_blueprint(public_bp)     # no prefix -> keeps "/"
@@ -24,3 +25,4 @@ def register_blueprints(app):
     app.register_blueprint(events_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(klippekort.bp)
+    app.register_blueprint(rooms_bp)
