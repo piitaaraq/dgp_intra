@@ -84,13 +84,13 @@ class User(db.Model):
 class LunchRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     user = db.relationship('User', backref='lunch_registrations')
 
 class BreakfastRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     user = db.relationship('User', backref='breakfast_registrations')
 
 class WeeklyMenu(db.Model):
@@ -124,7 +124,7 @@ class PatientsMenu(db.Model):
 
 class Vacation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
 
@@ -148,7 +148,7 @@ class Event(db.Model):
 
 class EventRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
 
     user = db.relationship('User', backref='event_registrations')
